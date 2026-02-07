@@ -6,49 +6,55 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 222 47% 11%;
+    --background: 220 20% 97%;
+    --foreground: 224 71% 4%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 224 71% 4%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 224 71% 4%;
 
-    --primary: 217 91% 60%;
+    --primary: 199 89% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 224 71% 4%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 217 91% 60%;
+    --accent: 262 83% 58%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 199 89% 48%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* Custom colors */
-    --primary-light: 217 91% 95%;
-    --primary-dark: 217 91% 45%;
-    --gradient-start: 217 91% 60%;
-    --gradient-end: 217 91% 50%;
+    /* Custom semantic colors */
+    --primary-light: 199 89% 95%;
+    --primary-dark: 199 89% 38%;
+    --gradient-start: 199 89% 48%;
+    --gradient-end: 262 83% 58%;
     
     /* Trust badge colors */
-    --trust-bg: 210 20% 98%;
-    --trust-border: 217 91% 80%;
+    --trust-bg: 199 89% 97%;
+    --trust-border: 199 89% 80%;
     
     /* Section colors */
-    --section-light: 210 20% 98%;
+    --section-light: 220 20% 97%;
     --section-white: 0 0% 100%;
+    
+    /* Success/Warning colors */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
   }
 
   .dark {
@@ -99,11 +105,12 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
+    background-size: 200% auto;
   }
 
   .section-padding {
-    @apply py-16 md:py-24 px-4 md:px-8;
+    @apply py-20 md:py-32 px-4 md:px-8;
   }
 
   .container-custom {
@@ -111,10 +118,22 @@
   }
 
   .card-shadow {
-    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   }
 
   .card-shadow-hover {
-    box-shadow: 0 8px 32px -4px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 20px 40px -12px rgba(6, 182, 212, 0.25), 0 8px 16px -8px rgba(139, 92, 246, 0.15);
+  }
+  
+  .glass-effect {
+    backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.8);
+  }
+  
+  .gradient-mesh {
+    background-image: 
+      radial-gradient(at 40% 20%, hsl(199 89% 48% / 0.15) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsl(262 83% 58% / 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, hsl(199 89% 95% / 0.3) 0px, transparent 50%);
   }
 }

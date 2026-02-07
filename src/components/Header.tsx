@@ -22,7 +22,6 @@ const Header = () => {
     navigate('/');
   };
 
-  // Get the appropriate link based on user role
   const getUserAreaLink = () => {
     if (roles.includes('admin')) return '/admin';
     if (roles.includes('cuidador')) return '/cuidador';
@@ -43,17 +42,18 @@ const Header = () => {
     { to: "/cliente", icon: LogIn, label: "Área do Cliente", variant: "ghost" as const, showWhen: 'cliente' },
   ];
 
-  // Filter menu items based on user roles
   const visibleMenuItems = user
     ? menuItems.filter((item) => roles.includes(item.showWhen as 'admin' | 'cuidador' | 'cliente'))
     : [];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border">
+    <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-border/50">
       <div className="container-custom mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center">
-            <span className="text-xl font-bold text-primary">CuidadoFácil</span>
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              CuidadoFácil
+            </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-2">
@@ -97,7 +97,11 @@ const Header = () => {
                     Entrar
                   </Link>
                 </Button>
-                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
+                <Button 
+                  size="sm" 
+                  className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground" 
+                  asChild
+                >
                   <Link to="/comecar">Começar Agora</Link>
                 </Button>
               </>
@@ -158,7 +162,7 @@ const Header = () => {
                       </Link>
                     </Button>
                     <Button
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground justify-start"
+                      className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground justify-start"
                       asChild
                       onClick={() => setIsOpen(false)}
                     >
