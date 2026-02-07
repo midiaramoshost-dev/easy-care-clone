@@ -1,12 +1,12 @@
 import Header from "@/components/Header";
-import HeroCarousel from "@/components/HeroCarousel";
-import StatsSection from "@/components/StatsSection";
+import HeroSection from "@/components/HeroSection";
+import NewStatsSection from "@/components/NewStatsSection";
 import TrustBadges from "@/components/TrustBadges";
-import FeaturesSection from "@/components/FeaturesSection";
+import NewFeaturesSection from "@/components/NewFeaturesSection";
 import TechnologySection from "@/components/TechnologySection";
-import TestimonialsSection from "@/components/TestimonialsSection";
+import NewTestimonialsSection from "@/components/NewTestimonialsSection";
 import PricingSection from "@/components/PricingSection";
-import CTASection from "@/components/CTASection";
+import NewCTASection from "@/components/NewCTASection";
 import Footer from "@/components/Footer";
 import FloatingCTA from "@/components/FloatingCTA";
 
@@ -15,14 +15,14 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        <HeroCarousel />
-        <StatsSection />
+        <HeroSection />
+        <NewStatsSection />
         <TrustBadges />
-        <FeaturesSection />
+        <NewFeaturesSection />
         <TechnologySection />
-        <TestimonialsSection />
+        <NewTestimonialsSection />
         <PricingSection />
-        <CTASection />
+        <NewCTASection />
       </main>
       <Footer />
       <FloatingCTA />

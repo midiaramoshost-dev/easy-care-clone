@@ -1,41 +1,59 @@
-import { Heart } from "lucide-react";
+import { Heart, Mail, Phone, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="bg-foreground text-white py-12">
-      <div className="container-custom mx-auto px-4 md:px-8">
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
+    <footer className="bg-foreground text-secondary-foreground relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-foreground via-foreground to-primary/20" />
+      
+      <div className="container-custom mx-auto px-4 md:px-8 py-16 relative z-10">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div>
-            <h3 className="text-xl font-bold text-primary mb-4">CuidadoFácil</h3>
-            <p className="text-sm text-gray-400">
-              Plataforma completa de monitoramento e cuidado para idosos.
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-4">
+              CuidadoFácil
+            </h3>
+            <p className="text-gray-400 mb-6 leading-relaxed">
+              Plataforma completa de monitoramento e cuidado para idosos, unindo tecnologia e carinho.
             </p>
+            <div className="flex flex-col gap-3">
+              <a href="mailto:contato@cuidadofacil.com.br" className="flex items-center gap-2 text-gray-400 hover:text-primary transition-colors">
+                <Mail className="w-4 h-4" />
+                contato@cuidadofacil.com.br
+              </a>
+              <a href="tel:+551140028922" className="flex items-center gap-2 text-gray-400 hover:text-primary transition-colors">
+                <Phone className="w-4 h-4" />
+                (11) 4002-8922
+              </a>
+            </div>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Produto</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="#" className="hover:text-white transition-colors">Recursos</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Preços</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Demonstração</a></li>
+            <h4 className="font-semibold text-white mb-6">Produto</h4>
+            <ul className="space-y-3 text-gray-400">
+              <li><a href="#" className="hover:text-primary transition-colors">Recursos</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Preços</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Demonstração</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Para Empresas</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Suporte</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="#" className="hover:text-white transition-colors">Central de Ajuda</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Contato</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
+            <h4 className="font-semibold text-white mb-6">Suporte</h4>
+            <ul className="space-y-3 text-gray-400">
+              <li><a href="#" className="hover:text-primary transition-colors">Central de Ajuda</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Contato</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">FAQ</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Status do Sistema</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="#" className="hover:text-white transition-colors">Privacidade</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Termos de Uso</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">LGPD</a></li>
+            <h4 className="font-semibold text-white mb-6">Legal</h4>
+            <ul className="space-y-3 text-gray-400">
+              <li><a href="#" className="hover:text-primary transition-colors">Política de Privacidade</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Termos de Uso</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Conformidade LGPD</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Cookies</a></li>
             </ul>
           </div>
         </div>
@@ -45,7 +63,7 @@ const Footer = () => {
             © 2024 CuidadoFácil. Todos os direitos reservados.
           </p>
           <p className="text-sm text-gray-400 flex items-center gap-1">
-            Feito com <Heart className="w-4 h-4 text-red-500 fill-red-500" /> no Brasil
+            Feito com <Heart className="w-4 h-4 text-destructive fill-destructive" /> no Brasil
           </p>
         </div>
       </div>
