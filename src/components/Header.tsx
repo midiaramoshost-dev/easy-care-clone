@@ -1,17 +1,52 @@
 import { Button } from "@/components/ui/button";
-import { Settings, Heart, LogIn, Menu, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Settings, Heart, LogIn, Menu, User, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, profile, roles, signOut, loading } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  // Get the appropriate link based on user role
+  const getUserAreaLink = () => {
+    if (roles.includes('admin')) return '/admin';
+    if (roles.includes('cuidador')) return '/cuidador';
+    if (roles.includes('cliente')) return '/cliente';
+    return '/';
+  };
+
+  const getUserAreaLabel = () => {
+    if (roles.includes('admin')) return 'Admin';
+    if (roles.includes('cuidador')) return 'Área do Cuidador';
+    if (roles.includes('cliente')) return 'Área do Cliente';
+    return 'Minha Área';
+  };
 
   const menuItems = [
-    { to: "/admin", icon: Settings, label: "Admin", variant: "outline" as const },
-    { to: "/cuidador", icon: Heart, label: "Área do Cuidador", variant: "ghost" as const },
-    { to: "/cliente", icon: LogIn, label: "Área do Cliente", variant: "ghost" as const },
+    { to: "/admin", icon: Settings, label: "Admin", variant: "outline" as const, showWhen: 'admin' },
+    { to: "/cuidador", icon: Heart, label: "Área do Cuidador", variant: "ghost" as const, showWhen: 'cuidador' },
+    { to: "/cliente", icon: LogIn, label: "Área do Cliente", variant: "ghost" as const, showWhen: 'cliente' },
   ];
+
+  // Filter menu items based on user roles
+  const visibleMenuItems = user
+    ? menuItems.filter((item) => roles.includes(item.showWhen as 'admin' | 'cuidador' | 'cliente'))
+    : [];
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border">
@@ -22,17 +57,51 @@ const Header = () => {
           </Link>
 
           <nav className="hidden md:flex items-center gap-2">
-            {menuItems.map((item) => (
-              <Button key={item.to} variant={item.variant} size="sm" className="gap-2" asChild>
-                <Link to={item.to}>
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
-                </Link>
-              </Button>
-            ))}
-            <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
-              <Link to="/comecar">Começar Agora</Link>
-            </Button>
+            {user ? (
+              <>
+                {visibleMenuItems.map((item) => (
+                  <Button key={item.to} variant={item.variant} size="sm" className="gap-2" asChild>
+                    <Link to={item.to}>
+                      <item.icon className="w-4 h-4" />
+                      {item.label}
+                    </Link>
+                  </Button>
+                ))}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <User className="w-4 h-4" />
+                      {profile?.full_name || user.email?.split('@')[0] || 'Usuário'}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link to={getUserAreaLink()} className="cursor-pointer">
+                        <User className="w-4 h-4 mr-2" />
+                        {getUserAreaLabel()}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sair
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" className="gap-2" asChild>
+                  <Link to="/auth">
+                    <LogIn className="w-4 h-4" />
+                    Entrar
+                  </Link>
+                </Button>
+                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
+                  <Link to="/comecar">Começar Agora</Link>
+                </Button>
+              </>
+            )}
           </nav>
 
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -43,27 +112,60 @@ const Header = () => {
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px]">
               <nav className="flex flex-col gap-4 mt-8">
-                {menuItems.map((item) => (
-                  <Button
-                    key={item.to}
-                    variant={item.variant}
-                    className="justify-start gap-2"
-                    asChild
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <Link to={item.to}>
-                      <item.icon className="w-4 h-4" />
-                      {item.label}
-                    </Link>
-                  </Button>
-                ))}
-                <Button
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground justify-start"
-                  asChild
-                  onClick={() => setIsOpen(false)}
-                >
-                  <Link to="/comecar">Começar Agora</Link>
-                </Button>
+                {user ? (
+                  <>
+                    <div className="px-2 py-3 border-b">
+                      <p className="font-medium">{profile?.full_name || user.email?.split('@')[0]}</p>
+                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                    </div>
+                    {visibleMenuItems.map((item) => (
+                      <Button
+                        key={item.to}
+                        variant={item.variant}
+                        className="justify-start gap-2"
+                        asChild
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <Link to={item.to}>
+                          <item.icon className="w-4 h-4" />
+                          {item.label}
+                        </Link>
+                      </Button>
+                    ))}
+                    <Button
+                      variant="ghost"
+                      className="justify-start gap-2 text-destructive hover:text-destructive"
+                      onClick={() => {
+                        handleSignOut();
+                        setIsOpen(false);
+                      }}
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sair
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="ghost"
+                      className="justify-start gap-2"
+                      asChild
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Link to="/auth">
+                        <LogIn className="w-4 h-4" />
+                        Entrar
+                      </Link>
+                    </Button>
+                    <Button
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground justify-start"
+                      asChild
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Link to="/comecar">Começar Agora</Link>
+                    </Button>
+                  </>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
