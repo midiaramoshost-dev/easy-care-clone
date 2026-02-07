@@ -6,7 +6,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
-import Admin from "./pages/Admin";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./components/admin/AdminDashboard";
+import AdminUsers from "./components/admin/AdminUsers";
+import AdminSchedules from "./components/admin/AdminSchedules";
+import AdminReports from "./components/admin/AdminReports";
+import AdminSettings from "./components/admin/AdminSettings";
 import AreaCuidador from "./pages/AreaCuidador";
 import AreaCliente from "./pages/AreaCliente";
 import ComecarAgora from "./pages/ComecarAgora";
@@ -29,10 +34,16 @@ const App = () => (
               path="/admin"
               element={
                 <ProtectedRoute requiredRole="admin">
-                  <Admin />
+                  <AdminLayout />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="usuarios" element={<AdminUsers />} />
+              <Route path="agendamentos" element={<AdminSchedules />} />
+              <Route path="relatorios" element={<AdminReports />} />
+              <Route path="configuracoes" element={<AdminSettings />} />
+            </Route>
             <Route
               path="/cuidador"
               element={
