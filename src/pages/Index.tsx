@@ -1,5 +1,5 @@
 import Header from "@/components/Header";
-import HeroSection from "@/components/HeroSection";
+import HeroSlideshow from "@/components/HeroSlideshow";
 import NewStatsSection from "@/components/NewStatsSection";
 import TrustBadges from "@/components/TrustBadges";
 import NewFeaturesSection from "@/components/NewFeaturesSection";
@@ -15,7 +15,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        <HeroSection />
+        <HeroSlideshow />
         <NewStatsSection />
         <TrustBadges />
         <NewFeaturesSection />
