@@ -3,28 +3,27 @@ import { Star, Quote } from "lucide-react";
 
 const testimonials = [
   {
-    name: "Maria Silva",
-    role: "Filha e cuidadora",
+    name: "Dr. Carlos Mendes",
+    role: "Geriatra - CRM 12345",
+    avatar: "CM",
+    content: "O CuidadoFácil revolucionou a forma como acompanho meus pacientes. Os relatórios detalhados e alertas em tempo real me permitem oferecer um cuidado muito mais personalizado e eficiente.",
+    rating: 5,
+  },
+  {
+    name: "Ana Beatriz Santos",
+    role: "Filha e Administradora",
+    avatar: "AB",
+    content: "Desde que começamos a usar o CuidadoFácil, a tranquilidade da nossa família aumentou enormemente. Saber que minha mãe está sendo bem cuidada, mesmo à distância, não tem preço.",
+    rating: 5,
+  },
+  {
+    name: "Enfermeira Márcia Silva",
+    role: "Cuidadora Profissional",
     avatar: "MS",
-    content: "O CuidadoFácil transformou a forma como cuido da minha mãe. Agora tenho tranquilidade mesmo quando não estou por perto.",
-    rating: 5,
-  },
-  {
-    name: "João Santos",
-    role: "Cuidador profissional",
-    avatar: "JS",
-    content: "A plataforma facilita muito o meu trabalho. Consigo manter a família informada e organizar todas as atividades do dia.",
-    rating: 5,
-  },
-  {
-    name: "Ana Costa",
-    role: "Enfermeira",
-    avatar: "AC",
-    content: "Recomendo para todas as famílias. Os relatórios de saúde são completos e ajudam muito no acompanhamento médico.",
+    content: "A plataforma facilita muito o meu trabalho diário. Consigo registrar todas as atividades, medicamentos e observações de forma organizada e acessível para toda a família.",
     rating: 5,
   },
 ];
-
 const NewTestimonialsSection = () => {
   return (
     <section className="section-padding bg-card relative overflow-hidden">
@@ -41,10 +40,10 @@ const NewTestimonialsSection = () => {
             Depoimentos
           </span>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            O que dizem sobre nós
+            Avaliações e Depoimentos de Clientes CuidadoFácil
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Milhares de famílias já confiam no CuidadoFácil para cuidar de quem amam
+            Depoimentos reais de profissionais e famílias que transformaram o cuidado
           </p>
         </motion.div>
 

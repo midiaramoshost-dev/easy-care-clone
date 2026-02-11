@@ -1,55 +1,11 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
-
-const plans = [
-  {
-    name: "Básico",
-    price: "Grátis",
-    description: "Para começar a organizar o cuidado",
-    features: [
-      "1 idoso monitorado",
-      "Agenda básica",
-      "Relatórios simples",
-      "Suporte por email",
-    ],
-    popular: false,
-    cta: "Começar Grátis",
-  },
-  {
-    name: "Família",
-    price: "R$ 49",
-    period: "/mês",
-    description: "Para famílias que precisam de mais recursos",
-    features: [
-      "Até 3 idosos",
-      "Agenda completa",
-      "Relatórios detalhados",
-      "Alertas personalizados",
-      "Suporte prioritário",
-    ],
-    popular: true,
-    cta: "Escolher Plano",
-  },
-  {
-    name: "Profissional",
-    price: "R$ 99",
-    period: "/mês",
-    description: "Para cuidadores e profissionais de saúde",
-    features: [
-      "Idosos ilimitados",
-      "Todas as funcionalidades",
-      "API e integrações",
-      "Relatórios avançados",
-      "Suporte 24/7",
-      "Treinamento incluso",
-    ],
-    popular: false,
-    cta: "Escolher Plano",
-  },
-];
+import { usePlans } from "@/hooks/usePlans";
 
 const PricingSection = () => {
+  const { data: plans = [] } = usePlans();
+
   return (
     <section className="section-padding bg-section-light relative overflow-hidden">
       <div className="absolute inset-0 gradient-mesh opacity-20" />
@@ -95,7 +51,7 @@ const PricingSection = () => {
               <div className="text-center mb-8">
                 <h3 className="text-xl font-semibold text-foreground mb-3">{plan.name}</h3>
                 <div className="flex items-baseline justify-center gap-1 mb-2">
-                  <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                  <span className="text-4xl font-bold text-foreground">{plan.price === 0 ? 'Grátis' : `R$ ${plan.price}`}</span>
                   {plan.period && (
                     <span className="text-muted-foreground">{plan.period}</span>
                   )}
@@ -121,7 +77,7 @@ const PricingSection = () => {
                     : "bg-secondary hover:bg-secondary/80 text-foreground"
                 }`}
               >
-                {plan.cta}
+                {plan.cta_text}
               </Button>
             </motion.div>
           ))}

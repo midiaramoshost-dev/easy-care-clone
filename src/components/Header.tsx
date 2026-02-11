@@ -44,7 +44,7 @@ const Header = () => {
 
   const visibleMenuItems = user
     ? menuItems.filter((item) => roles.includes(item.showWhen as 'admin' | 'cuidador' | 'cliente'))
-    : [];
+    : menuItems;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-border/50">
@@ -91,6 +91,14 @@ const Header = () => {
               </>
             ) : (
               <>
+                {visibleMenuItems.map((item) => (
+                  <Button key={item.to} variant={item.variant} size="sm" className="gap-2" asChild>
+                    <Link to={item.to}>
+                      <item.icon className="w-4 h-4" />
+                      {item.label}
+                    </Link>
+                  </Button>
+                ))}
                 <Button variant="ghost" size="sm" className="gap-2" asChild>
                   <Link to="/auth">
                     <LogIn className="w-4 h-4" />
@@ -150,6 +158,20 @@ const Header = () => {
                   </>
                 ) : (
                   <>
+                    {visibleMenuItems.map((item) => (
+                      <Button
+                        key={item.to}
+                        variant={item.variant}
+                        className="justify-start gap-2"
+                        asChild
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <Link to={item.to}>
+                          <item.icon className="w-4 h-4" />
+                          {item.label}
+                        </Link>
+                      </Button>
+                    ))}
                     <Button
                       variant="ghost"
                       className="justify-start gap-2"
