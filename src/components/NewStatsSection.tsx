@@ -3,26 +3,26 @@ import { Heart, Clock, Star, Users } from "lucide-react";
 
 const stats = [
   { 
-    value: "10.000+", 
+    value: "500+", 
     label: "Famílias Atendidas",
     icon: Users,
     gradient: "from-primary to-accent"
   },
   { 
     value: "24/7", 
-    label: "Monitoramento Contínuo",
+    label: "Monitoramento",
     icon: Clock,
     gradient: "from-accent to-primary"
   },
   { 
     value: "98%", 
-    label: "Taxa de Satisfação",
+    label: "Satisfação",
     icon: Heart,
     gradient: "from-primary to-accent"
   },
   { 
-    value: "4.9★", 
-    label: "Avaliação Média",
+    value: "5★", 
+    label: "Avaliação",
     icon: Star,
     gradient: "from-accent to-primary"
   },

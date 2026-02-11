@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Shield, Heart, Users, BarChart3, Clock, TrendingUp, Smartphone, Bell } from "lucide-react";
+import { Shield, Heart, Users, BarChart3, Clock, TrendingUp } from "lucide-react";
 
 const features = [
   {
@@ -33,25 +33,12 @@ const features = [
     gradient: "from-primary to-accent",
   },
   {
-    icon: Bell,
-    title: "Alertas Personalizados",
-    description: "Notificações em tempo real sobre medicamentos, consultas e bem-estar",
-    gradient: "from-accent to-primary",
-  },
-  {
-    icon: Smartphone,
-    title: "App Intuitivo",
-    description: "Interface simples e acessível para toda a família, de qualquer lugar",
-    gradient: "from-primary to-accent",
-  },
-  {
     icon: TrendingUp,
     title: "Resultados Comprovados",
     description: "95% das famílias relatam melhoria na organização dos cuidados",
     gradient: "from-accent to-primary",
   },
 ];
-
 const NewFeaturesSection = () => {
   return (
     <section className="section-padding bg-section-light relative overflow-hidden">
@@ -68,16 +55,14 @@ const NewFeaturesSection = () => {
             Recursos
           </span>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            Tudo que você precisa para
-            <br />
-            <span className="text-gradient">cuidar de quem você ama</span>
+            Recursos que fazem a diferença
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Tecnologia de ponta aliada ao cuidado humano para proporcionar tranquilidade à sua família
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
             <motion.div
               key={index}

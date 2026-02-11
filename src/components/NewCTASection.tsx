@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle } from "lucide-react";
 
 const benefits = [
-  "7 dias grátis para testar",
   "Sem compromisso",
   "Cancele quando quiser",
   "Suporte incluído"
@@ -30,13 +29,11 @@ const NewCTASection = () => {
           </span>
           
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
-            Junte-se a milhares de famílias
-            <br />
-            que já cuidam melhor
+            Comece hoje mesmo
           </h2>
           
           <p className="text-lg text-white/90 max-w-2xl mx-auto mb-8">
-            Descubra como a tecnologia pode trazer mais tranquilidade e segurança para você e seus entes queridos.
+            Junte-se a milhares de famílias que já descobriram como cuidar melhor de quem mais amam. Teste grátis por 7 dias.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 mb-10">

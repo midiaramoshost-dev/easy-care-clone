@@ -8,7 +8,7 @@ const badges = [
   { icon: Clock, title: "99.9% Uptime", subtitle: "Sempre Disponível" },
 ];
 
-const companies = ["Hospital Sírio-Libanês", "Einstein", "Unimed", "Bradesco Saúde", "SulAmérica"];
+const companies = ["Empresa 1", "Empresa 2", "Empresa 3", "Empresa 4", "Empresa 5"];
 
 const TrustBadges = () => {
   return (
@@ -22,7 +22,7 @@ const TrustBadges = () => {
           viewport={{ once: true }}
           className="text-center text-sm text-muted-foreground mb-8"
         >
-          Confiado por mais de 10.000 famílias e parceiros em todo o Brasil
+          Confiado por mais de 500 famílias e parceiros em todo o Brasil
         </motion.p>
 
         <motion.div 

@@ -25,9 +25,9 @@ const TechnologySection = () => {
               Tecnologia
             </span>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
-              Inteligência artificial que
+              Tecnologia que
               <br />
-              <span className="text-gradient">protege quem você ama</span>
+              <span className="text-gradient">cuida de quem você ama</span>
             </h2>
             <p className="text-lg text-muted-foreground mb-10">
               Nossa IA aprende os padrões de saúde do seu familiar e envia alertas preventivos antes que problemas aconteçam.
