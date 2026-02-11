@@ -1,18 +1,112 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Calendar, Clock, MapPin, Star, ArrowLeft, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Heart, Calendar, Clock, MapPin, Star, ArrowLeft, User, CheckCircle, XCircle, FileText, Bell, Settings, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  pending: { label: "Pendente", variant: "outline" },
+  confirmed: { label: "Confirmado", variant: "default" },
+  completed: { label: "Concluído", variant: "secondary" },
+  cancelled: { label: "Cancelado", variant: "destructive" },
+};
 
 const AreaCuidador = () => {
-  const proximosAtendimentos = [
-    { id: 1, cliente: "Maria Silva", horario: "08:00 - 12:00", endereco: "Rua das Flores, 123", tipo: "Cuidado Diário" },
-    { id: 2, cliente: "João Santos", horario: "14:00 - 18:00", endereco: "Av. Principal, 456", tipo: "Acompanhamento" },
-    { id: 3, cliente: "Ana Costa", horario: "19:00 - 22:00", endereco: "Rua do Sol, 789", tipo: "Noturno" },
-  ];
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    full_name: profile?.full_name || "",
+    phone: profile?.phone || "",
+    address: profile?.address || "",
+  });
+
+  // Fetch appointments for this caregiver
+  const { data: appointments = [], isLoading: loadingAppointments } = useQuery({
+    queryKey: ["caregiver-appointments", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("*")
+        .eq("caregiver_id", user!.id)
+        .order("scheduled_date", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch reviews for this caregiver
+  const { data: reviews = [] } = useQuery({
+    queryKey: ["caregiver-reviews", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("*")
+        .eq("reviewed_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Update appointment status
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase
+        .from("appointments")
+        .update({ status })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["caregiver-appointments"] });
+      toast.success("Status atualizado!");
+    },
+  });
+
+  // Update profile
+  const updateProfile = useMutation({
+    mutationFn: async (form: typeof profileForm) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update(form)
+        .eq("id", user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Perfil atualizado!");
+      setEditingProfile(false);
+      queryClient.invalidateQueries({ queryKey: ["caregiver-appointments"] });
+    },
+  });
+
+  const todayStr = new Date().toISOString().split("T")[0];
+  const todayAppointments = appointments.filter((a) => a.scheduled_date === todayStr);
+  const pendingAppointments = appointments.filter((a) => a.status === "pending");
+  const completedAppointments = appointments.filter((a) => a.status === "completed");
+  const avgRating = reviews.length > 0 ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) : "—";
+  const totalHours = completedAppointments.length * 4; // estimated
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-white border-b border-border">
+      <header className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link to="/">
@@ -27,81 +121,301 @@ const AreaCuidador = () => {
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm">
-              <User className="w-4 h-4 mr-2" />
-              Meu Perfil
+            <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
+            <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sair
             </Button>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5">
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Atendimentos Hoje</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Hoje</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">3</div>
+              <div className="text-3xl font-bold text-primary">{todayAppointments.length}</div>
+              <p className="text-xs text-muted-foreground">atendimentos</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-green-100 to-green-50">
+          <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Avaliação Média</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-amber-600">{pendingAppointments.length}</div>
+              <p className="text-xs text-muted-foreground">aguardando</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Avaliação</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-600 flex items-center gap-1">
-                4.9 <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                {avgRating} {reviews.length > 0 && <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />}
               </div>
+              <p className="text-xs text-muted-foreground">{reviews.length} avaliações</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-blue-100 to-blue-50">
+          <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Horas este Mês</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Concluídos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-600">128h</div>
+              <div className="text-3xl font-bold text-blue-600">{completedAppointments.length}</div>
+              <p className="text-xs text-muted-foreground">atendimentos</p>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-primary" />
-              Próximos Atendimentos
-            </CardTitle>
-            <CardDescription>Seus agendamentos para hoje</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {proximosAtendimentos.map((atendimento) => (
-                <div
-                  key={atendimento.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                >
-                  <div className="space-y-1">
-                    <h4 className="font-semibold">{atendimento.cliente}</h4>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {atendimento.horario}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        {atendimento.endereco}
-                      </span>
-                    </div>
-                    <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
-                      {atendimento.tipo}
-                    </span>
+        <Tabs defaultValue="agenda" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="agenda"><Calendar className="w-4 h-4 mr-1" /> Agenda</TabsTrigger>
+            <TabsTrigger value="pendentes"><Bell className="w-4 h-4 mr-1" /> Pendentes</TabsTrigger>
+            <TabsTrigger value="avaliacoes"><Star className="w-4 h-4 mr-1" /> Avaliações</TabsTrigger>
+            <TabsTrigger value="perfil"><User className="w-4 h-4 mr-1" /> Perfil</TabsTrigger>
+          </TabsList>
+
+          {/* Agenda Tab */}
+          <TabsContent value="agenda">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  Todos os Atendimentos
+                </CardTitle>
+                <CardDescription>Seus agendamentos ordenados por data</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingAppointments ? (
+                  <p className="text-muted-foreground text-center py-8">Carregando...</p>
+                ) : appointments.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">Nenhum atendimento encontrado.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {appointments.map((apt) => (
+                      <div key={apt.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold">{apt.type}</h4>
+                            <Badge variant={statusMap[apt.status]?.variant || "outline"}>
+                              {statusMap[apt.status]?.label || apt.status}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {new Date(apt.scheduled_date + "T00:00:00").toLocaleDateString("pt-BR")}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              {apt.start_time.slice(0, 5)} - {apt.end_time.slice(0, 5)}
+                            </span>
+                          </div>
+                          {apt.address && (
+                            <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <MapPin className="w-4 h-4" />
+                              {apt.address}
+                            </span>
+                          )}
+                          {apt.notes && (
+                            <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <FileText className="w-4 h-4" />
+                              {apt.notes}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          {apt.status === "pending" && (
+                            <>
+                              <Button size="sm" onClick={() => updateStatus.mutate({ id: apt.id, status: "confirmed" })}>
+                                <CheckCircle className="w-4 h-4 mr-1" /> Confirmar
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={() => updateStatus.mutate({ id: apt.id, status: "cancelled" })}>
+                                <XCircle className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
+                          {apt.status === "confirmed" && (
+                            <Button size="sm" variant="secondary" onClick={() => updateStatus.mutate({ id: apt.id, status: "completed" })}>
+                              <CheckCircle className="w-4 h-4 mr-1" /> Concluir
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <Button size="sm">Iniciar</Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Pendentes Tab */}
+          <TabsContent value="pendentes">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-amber-600" />
+                  Atendimentos Pendentes
+                </CardTitle>
+                <CardDescription>Atendimentos que precisam de confirmação</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {pendingAppointments.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">Nenhum atendimento pendente. 🎉</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingAppointments.map((apt) => (
+                      <div key={apt.id} className="flex items-center justify-between p-4 rounded-lg border border-amber-200 bg-amber-50">
+                        <div className="space-y-1">
+                          <h4 className="font-semibold">{apt.type}</h4>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {new Date(apt.scheduled_date + "T00:00:00").toLocaleDateString("pt-BR")}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              {apt.start_time.slice(0, 5)} - {apt.end_time.slice(0, 5)}
+                            </span>
+                          </div>
+                          {apt.address && (
+                            <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <MapPin className="w-4 h-4" /> {apt.address}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => updateStatus.mutate({ id: apt.id, status: "confirmed" })}>
+                            <CheckCircle className="w-4 h-4 mr-1" /> Aceitar
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => updateStatus.mutate({ id: apt.id, status: "cancelled" })}>
+                            <XCircle className="w-4 h-4 mr-1" /> Recusar
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Avaliações Tab */}
+          <TabsContent value="avaliacoes">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="w-5 h-5 text-yellow-500" />
+                  Minhas Avaliações
+                </CardTitle>
+                <CardDescription>Avaliações recebidas dos clientes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {reviews.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">Nenhuma avaliação recebida ainda.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {reviews.map((review) => (
+                      <div key={review.id} className="p-4 rounded-lg bg-muted/50">
+                        <div className="flex items-center gap-1 mb-2">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`}
+                            />
+                          ))}
+                          <span className="text-sm text-muted-foreground ml-2">
+                            {new Date(review.created_at).toLocaleDateString("pt-BR")}
+                          </span>
+                        </div>
+                        {review.comment && <p className="text-sm">{review.comment}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Perfil Tab */}
+          <TabsContent value="perfil">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-primary" />
+                  Meu Perfil
+                </CardTitle>
+                <CardDescription>Gerencie suas informações pessoais</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {editingProfile ? (
+                  <div className="space-y-4 max-w-md">
+                    <div>
+                      <Label>Nome Completo</Label>
+                      <Input
+                        value={profileForm.full_name}
+                        onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Telefone</Label>
+                      <Input
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Endereço</Label>
+                      <Input
+                        value={profileForm.address}
+                        onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={() => updateProfile.mutate(profileForm)}>Salvar</Button>
+                      <Button variant="outline" onClick={() => setEditingProfile(false)}>Cancelar</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-w-md">
+                    <div>
+                      <Label className="text-muted-foreground">Email</Label>
+                      <p className="font-medium">{user?.email}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Nome</Label>
+                      <p className="font-medium">{profile?.full_name || "Não informado"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Telefone</Label>
+                      <p className="font-medium">{profile?.phone || "Não informado"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Endereço</Label>
+                      <p className="font-medium">{profile?.address || "Não informado"}</p>
+                    </div>
+                    <Button onClick={() => {
+                      setProfileForm({
+                        full_name: profile?.full_name || "",
+                        phone: profile?.phone || "",
+                        address: profile?.address || "",
+                      });
+                      setEditingProfile(true);
+                    }}>
+                      Editar Perfil
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
