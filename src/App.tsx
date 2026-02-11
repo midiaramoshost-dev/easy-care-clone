@@ -44,22 +44,8 @@ const App = () => (
               <Route path="relatorios" element={<AdminReports />} />
               <Route path="configuracoes" element={<AdminSettings />} />
             </Route>
-            <Route
-              path="/cuidador"
-              element={
-                <ProtectedRoute requiredRole="cuidador">
-                  <AreaCuidador />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/cliente"
-              element={
-                <ProtectedRoute requiredRole="cliente">
-                  <AreaCliente />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/cuidador" element={<AreaCuidador />} />
+            <Route path="/cliente" element={<AreaCliente />} />
             <Route path="/comecar" element={<ComecarAgora />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
