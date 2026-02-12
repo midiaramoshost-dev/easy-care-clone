@@ -17,6 +17,9 @@ import AreaCliente from "./pages/AreaCliente";
 import ComecarAgora from "./pages/ComecarAgora";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import CareGroupsPage from "./features/care-groups/CareGroupsPage";
+import CareGroupDetailPage from "./features/care-groups/CareGroupDetailPage";
+import CompanyDashboard from "./features/company/CompanyDashboard";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +50,9 @@ const App = () => (
             <Route path="/cuidador" element={<AreaCuidador />} />
             <Route path="/cliente" element={<AreaCliente />} />
             <Route path="/comecar" element={<ComecarAgora />} />
+            <Route path="/care-groups" element={<CareGroupsPage />} />
+            <Route path="/care-groups/:id" element={<CareGroupDetailPage />} />
+            <Route path="/empresa" element={<CompanyDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

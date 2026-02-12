@@ -74,6 +74,117 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action_type: Database["public"]["Enums"]["audit_action_type"]
+          care_group_id: string | null
+          created_at: string
+          details: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["audit_action_type"]
+          care_group_id?: string | null
+          created_at?: string
+          details?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["audit_action_type"]
+          care_group_id?: string | null
+          created_at?: string
+          details?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_care_group_id_fkey"
+            columns: ["care_group_id"]
+            isOneToOne: false
+            referencedRelation: "care_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      care_group_users: {
+        Row: {
+          care_group_id: string
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["care_group_role"]
+          user_id: string
+        }
+        Insert: {
+          care_group_id: string
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["care_group_role"]
+          user_id: string
+        }
+        Update: {
+          care_group_id?: string
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["care_group_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_group_users_care_group_id_fkey"
+            columns: ["care_group_id"]
+            isOneToOne: false
+            referencedRelation: "care_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      care_groups: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          id: string
+          name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_groups_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       caregivers: {
         Row: {
           active: boolean | null
@@ -123,6 +234,68 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      checkins: {
+        Row: {
+          caregiver_id: string
+          created_at: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          shift_id: string
+        }
+        Insert: {
+          caregiver_id: string
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          shift_id: string
+        }
+        Update: {
+          caregiver_id?: string
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          shift_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkins_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          cnpj: string | null
+          created_at: string
+          id: string
+          name: string
+          plan_type: Database["public"]["Enums"]["company_plan_type"]
+          updated_at: string
+        }
+        Insert: {
+          cnpj?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          plan_type?: Database["public"]["Enums"]["company_plan_type"]
+          updated_at?: string
+        }
+        Update: {
+          cnpj?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          plan_type?: Database["public"]["Enums"]["company_plan_type"]
+          updated_at?: string
+        }
+        Relationships: []
       }
       contacts: {
         Row: {
@@ -534,6 +707,50 @@ export type Database = {
           },
         ]
       }
+      shifts: {
+        Row: {
+          care_group_id: string
+          caregiver_id: string
+          created_at: string
+          end_time: string
+          id: string
+          notes: string | null
+          start_time: string
+          status: Database["public"]["Enums"]["shift_status"]
+          updated_at: string
+        }
+        Insert: {
+          care_group_id: string
+          caregiver_id: string
+          created_at?: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          start_time: string
+          status?: Database["public"]["Enums"]["shift_status"]
+          updated_at?: string
+        }
+        Update: {
+          care_group_id?: string
+          caregiver_id?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          start_time?: string
+          status?: Database["public"]["Enums"]["shift_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shifts_care_group_id_fkey"
+            columns: ["care_group_id"]
+            isOneToOne: false
+            referencedRelation: "care_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_activities: {
         Row: {
           action: string
@@ -599,6 +816,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      has_care_group_role: {
+        Args: {
+          _care_group_id: string
+          _role: Database["public"]["Enums"]["care_group_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -606,10 +831,26 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_care_group_member: {
+        Args: { _care_group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_company_admin: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_company_member: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "cuidador" | "cliente"
+      audit_action_type: "CREATE" | "UPDATE" | "DELETE"
+      care_group_role: "responsavel" | "cuidador" | "admin_empresa"
+      company_plan_type: "basic" | "premium" | "professional" | "enterprise"
       reminder_status: "pending" | "administered" | "skipped"
+      shift_status: "scheduled" | "active" | "completed" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -738,7 +979,11 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "cuidador", "cliente"],
+      audit_action_type: ["CREATE", "UPDATE", "DELETE"],
+      care_group_role: ["responsavel", "cuidador", "admin_empresa"],
+      company_plan_type: ["basic", "premium", "professional", "enterprise"],
       reminder_status: ["pending", "administered", "skipped"],
+      shift_status: ["scheduled", "active", "completed", "cancelled"],
     },
   },
 } as const
