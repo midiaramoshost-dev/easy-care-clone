@@ -8,7 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Calendar, Heart, Clock, Star, ArrowLeft, Phone, MessageCircle, Plus, Settings, LogOut, FileText, MapPin } from "lucide-react";
+import { User, Calendar, Heart, Clock, Star, ArrowLeft, Phone, MessageCircle, Plus, Settings, LogOut, FileText, MapPin, Users, Pill, Activity, BookOpen } from "lucide-react";
+import { ElderlyTab } from "@/components/cliente/ElderlyTab";
+import { MedicationsTab } from "@/components/cliente/MedicationsTab";
+import { HealthTab } from "@/components/cliente/HealthTab";
+import { DiaryTab } from "@/components/cliente/DiaryTab";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -222,9 +226,13 @@ const AreaCliente = () => {
         </div>
 
         <Tabs defaultValue="agendamentos" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="flex w-full overflow-x-auto">
             <TabsTrigger value="agendamentos"><Calendar className="w-4 h-4 mr-1" /> Agendamentos</TabsTrigger>
             <TabsTrigger value="novo"><Plus className="w-4 h-4 mr-1" /> Novo</TabsTrigger>
+            <TabsTrigger value="idosos"><Users className="w-4 h-4 mr-1" /> Idosos</TabsTrigger>
+            <TabsTrigger value="medicamentos"><Pill className="w-4 h-4 mr-1" /> Medicamentos</TabsTrigger>
+            <TabsTrigger value="saude"><Activity className="w-4 h-4 mr-1" /> Saúde</TabsTrigger>
+            <TabsTrigger value="diario"><BookOpen className="w-4 h-4 mr-1" /> Diário</TabsTrigger>
             <TabsTrigger value="avaliacoes"><Star className="w-4 h-4 mr-1" /> Avaliações</TabsTrigger>
             <TabsTrigger value="perfil"><User className="w-4 h-4 mr-1" /> Perfil</TabsTrigger>
           </TabsList>
@@ -448,6 +456,11 @@ const AreaCliente = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="idosos"><ElderlyTab /></TabsContent>
+          <TabsContent value="medicamentos"><MedicationsTab /></TabsContent>
+          <TabsContent value="saude"><HealthTab /></TabsContent>
+          <TabsContent value="diario"><DiaryTab /></TabsContent>
         </Tabs>
 
         {/* Review Dialog */}

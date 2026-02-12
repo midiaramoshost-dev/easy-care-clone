@@ -74,6 +74,56 @@ export type Database = {
           },
         ]
       }
+      caregivers: {
+        Row: {
+          active: boolean | null
+          availability: string | null
+          avatar_url: string | null
+          bio: string | null
+          certifications: string[] | null
+          created_at: string
+          experience_years: number | null
+          hourly_rate: number | null
+          id: string
+          specialty: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          availability?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          certifications?: string[] | null
+          created_at?: string
+          experience_years?: number | null
+          hourly_rate?: number | null
+          id: string
+          specialty?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          availability?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          certifications?: string[] | null
+          created_at?: string
+          experience_years?: number | null
+          hourly_rate?: number | null
+          id?: string
+          specialty?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caregivers_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           created_at: string
@@ -106,6 +156,259 @@ export type Database = {
           type?: string
         }
         Relationships: []
+      }
+      diary_entries: {
+        Row: {
+          activities: string | null
+          author_id: string
+          content: string
+          created_at: string
+          elderly_id: string
+          id: string
+          meals: string | null
+          mood: string | null
+        }
+        Insert: {
+          activities?: string | null
+          author_id: string
+          content: string
+          created_at?: string
+          elderly_id: string
+          id?: string
+          meals?: string | null
+          mood?: string | null
+        }
+        Update: {
+          activities?: string | null
+          author_id?: string
+          content?: string
+          created_at?: string
+          elderly_id?: string
+          id?: string
+          meals?: string | null
+          mood?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diary_entries_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diary_entries_elderly_id_fkey"
+            columns: ["elderly_id"]
+            isOneToOne: false
+            referencedRelation: "elderly"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      elderly: {
+        Row: {
+          birth_date: string | null
+          created_at: string
+          emergency_contact: string | null
+          emergency_phone: string | null
+          id: string
+          medical_conditions: string | null
+          name: string
+          notes: string | null
+          photo_url: string | null
+          responsible_id: string
+          special_needs: string | null
+          updated_at: string
+        }
+        Insert: {
+          birth_date?: string | null
+          created_at?: string
+          emergency_contact?: string | null
+          emergency_phone?: string | null
+          id?: string
+          medical_conditions?: string | null
+          name: string
+          notes?: string | null
+          photo_url?: string | null
+          responsible_id: string
+          special_needs?: string | null
+          updated_at?: string
+        }
+        Update: {
+          birth_date?: string | null
+          created_at?: string
+          emergency_contact?: string | null
+          emergency_phone?: string | null
+          id?: string
+          medical_conditions?: string | null
+          name?: string
+          notes?: string | null
+          photo_url?: string | null
+          responsible_id?: string
+          special_needs?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "elderly_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_records: {
+        Row: {
+          blood_pressure: string | null
+          blood_sugar: number | null
+          created_at: string
+          elderly_id: string
+          heart_rate: number | null
+          id: string
+          notes: string | null
+          recorded_at: string
+          recorded_by: string
+          temperature: number | null
+          weight: number | null
+        }
+        Insert: {
+          blood_pressure?: string | null
+          blood_sugar?: number | null
+          created_at?: string
+          elderly_id: string
+          heart_rate?: number | null
+          id?: string
+          notes?: string | null
+          recorded_at?: string
+          recorded_by: string
+          temperature?: number | null
+          weight?: number | null
+        }
+        Update: {
+          blood_pressure?: string | null
+          blood_sugar?: number | null
+          created_at?: string
+          elderly_id?: string
+          heart_rate?: number | null
+          id?: string
+          notes?: string | null
+          recorded_at?: string
+          recorded_by?: string
+          temperature?: number | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_records_elderly_id_fkey"
+            columns: ["elderly_id"]
+            isOneToOne: false
+            referencedRelation: "elderly"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_records_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medication_reminders: {
+        Row: {
+          administered_by: string | null
+          created_at: string
+          id: string
+          medication_id: string
+          notes: string | null
+          scheduled_time: string
+          status: Database["public"]["Enums"]["reminder_status"]
+        }
+        Insert: {
+          administered_by?: string | null
+          created_at?: string
+          id?: string
+          medication_id: string
+          notes?: string | null
+          scheduled_time: string
+          status?: Database["public"]["Enums"]["reminder_status"]
+        }
+        Update: {
+          administered_by?: string | null
+          created_at?: string
+          id?: string
+          medication_id?: string
+          notes?: string | null
+          scheduled_time?: string
+          status?: Database["public"]["Enums"]["reminder_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_reminders_administered_by_fkey"
+            columns: ["administered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_reminders_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medications: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          dosage: string | null
+          elderly_id: string
+          end_date: string | null
+          frequency: string | null
+          id: string
+          name: string
+          notes: string | null
+          schedule_times: Json | null
+          start_date: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          dosage?: string | null
+          elderly_id: string
+          end_date?: string | null
+          frequency?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          schedule_times?: Json | null
+          start_date?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          dosage?: string | null
+          elderly_id?: string
+          end_date?: string | null
+          frequency?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          schedule_times?: Json | null
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medications_elderly_id_fkey"
+            columns: ["elderly_id"]
+            isOneToOne: false
+            referencedRelation: "elderly"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       plans: {
         Row: {
@@ -231,6 +534,38 @@ export type Database = {
           },
         ]
       }
+      user_activities: {
+        Row: {
+          action: string
+          created_at: string
+          details: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activities_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -274,6 +609,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "cuidador" | "cliente"
+      reminder_status: "pending" | "administered" | "skipped"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -402,6 +738,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "cuidador", "cliente"],
+      reminder_status: ["pending", "administered", "skipped"],
     },
   },
 } as const

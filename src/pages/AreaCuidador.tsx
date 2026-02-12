@@ -6,7 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Calendar, Clock, MapPin, Star, ArrowLeft, User, CheckCircle, XCircle, FileText, Bell, Settings, LogOut } from "lucide-react";
+import { Heart, Calendar, Clock, MapPin, Star, ArrowLeft, User, CheckCircle, XCircle, FileText, Bell, Settings, LogOut, Briefcase, Users, Activity, BookOpen } from "lucide-react";
+import { CaregiverProfileTab } from "@/components/cuidador/CaregiverProfileTab";
+import { CaregiverElderlyTab } from "@/components/cuidador/CaregiverElderlyTab";
+import { CaregiverHealthTab } from "@/components/cuidador/CaregiverHealthTab";
+import { CaregiverDiaryTab } from "@/components/cuidador/CaregiverDiaryTab";
+import { CaregiverRemindersTab } from "@/components/cuidador/CaregiverRemindersTab";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -174,9 +179,14 @@ const AreaCuidador = () => {
         </div>
 
         <Tabs defaultValue="agenda" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="flex w-full overflow-x-auto">
             <TabsTrigger value="agenda"><Calendar className="w-4 h-4 mr-1" /> Agenda</TabsTrigger>
             <TabsTrigger value="pendentes"><Bell className="w-4 h-4 mr-1" /> Pendentes</TabsTrigger>
+            <TabsTrigger value="profissional"><Briefcase className="w-4 h-4 mr-1" /> Profissional</TabsTrigger>
+            <TabsTrigger value="idosos"><Users className="w-4 h-4 mr-1" /> Idosos</TabsTrigger>
+            <TabsTrigger value="saude"><Activity className="w-4 h-4 mr-1" /> Saúde</TabsTrigger>
+            <TabsTrigger value="diario"><BookOpen className="w-4 h-4 mr-1" /> Diário</TabsTrigger>
+            <TabsTrigger value="lembretes"><Bell className="w-4 h-4 mr-1" /> Lembretes</TabsTrigger>
             <TabsTrigger value="avaliacoes"><Star className="w-4 h-4 mr-1" /> Avaliações</TabsTrigger>
             <TabsTrigger value="perfil"><User className="w-4 h-4 mr-1" /> Perfil</TabsTrigger>
           </TabsList>
@@ -415,6 +425,12 @@ const AreaCuidador = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="profissional"><CaregiverProfileTab /></TabsContent>
+          <TabsContent value="idosos"><CaregiverElderlyTab /></TabsContent>
+          <TabsContent value="saude"><CaregiverHealthTab /></TabsContent>
+          <TabsContent value="diario"><CaregiverDiaryTab /></TabsContent>
+          <TabsContent value="lembretes"><CaregiverRemindersTab /></TabsContent>
         </Tabs>
       </main>
     </div>
