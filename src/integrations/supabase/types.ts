@@ -196,6 +196,7 @@ export type Database = {
           experience_years: number | null
           hourly_rate: number | null
           id: string
+          resume_url: string | null
           specialty: string | null
           updated_at: string
         }
@@ -209,6 +210,7 @@ export type Database = {
           experience_years?: number | null
           hourly_rate?: number | null
           id: string
+          resume_url?: string | null
           specialty?: string | null
           updated_at?: string
         }
@@ -222,6 +224,7 @@ export type Database = {
           experience_years?: number | null
           hourly_rate?: number | null
           id?: string
+          resume_url?: string | null
           specialty?: string | null
           updated_at?: string
         }
@@ -631,6 +634,7 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          avatar_url: string | null
           created_at: string
           full_name: string | null
           id: string
@@ -639,6 +643,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           id: string
@@ -647,6 +652,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
@@ -747,6 +753,50 @@ export type Database = {
             columns: ["care_group_id"]
             isOneToOne: false
             referencedRelation: "care_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          billing_period: string
+          created_at: string
+          end_date: string | null
+          id: string
+          plan_id: string | null
+          start_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_period?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          plan_id?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_period?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          plan_id?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
             referencedColumns: ["id"]
           },
         ]

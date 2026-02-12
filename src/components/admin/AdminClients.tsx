@@ -1,0 +1,344 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { usePlans } from "@/hooks/usePlans";
+import { Search, Loader2, Eye, Camera } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import type { Database } from "@/integrations/supabase/types";
+
+type AppRole = Database["public"]["Enums"]["app_role"];
+
+interface ClientRow {
+  id: string;
+  full_name: string | null;
+  phone: string | null;
+  address: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  subscription?: { plan_id: string | null; status: string; billing_period: string } | null;
+}
+
+export function AdminClients() {
+  const [clients, setClients] = useState<ClientRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<ClientRow | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const { toast } = useToast();
+  const { data: plans = [] } = usePlans();
+
+  const [form, setForm] = useState({
+    full_name: "",
+    phone: "",
+    address: "",
+    plan_id: "",
+    billing_period: "monthly",
+  });
+
+  const fetchClients = async () => {
+    setLoading(true);
+    try {
+      // Get users with 'cliente' role
+      const { data: roles, error: rolesErr } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "cliente" as AppRole);
+      if (rolesErr) throw rolesErr;
+
+      const clientIds = (roles || []).map((r) => r.user_id);
+      if (clientIds.length === 0) {
+        setClients([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data: profiles, error: profErr } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", clientIds)
+        .order("created_at", { ascending: false });
+      if (profErr) throw profErr;
+
+      const { data: subs } = await supabase
+        .from("subscriptions")
+        .select("user_id, plan_id, status, billing_period")
+        .in("user_id", clientIds);
+
+      const mapped: ClientRow[] = (profiles || []).map((p) => ({
+        id: p.id,
+        full_name: p.full_name,
+        phone: p.phone,
+        address: p.address,
+        avatar_url: (p as any).avatar_url || null,
+        created_at: p.created_at,
+        subscription: subs?.find((s) => s.user_id === p.id) || null,
+      }));
+      setClients(mapped);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      toast({ variant: "destructive", title: "Erro ao carregar clientes" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchClients(); }, []);
+
+  const handleSave = async () => {
+    if (!form.full_name.trim()) {
+      toast({ variant: "destructive", title: "Nome é obrigatório" });
+      return;
+    }
+    if (!selectedClient) return;
+    setSaving(true);
+    try {
+      const userId = selectedClient.id;
+
+      let avatarUrl = selectedClient.avatar_url;
+      if (photoFile) {
+        const path = `clients/${userId}/${Date.now()}_${photoFile.name}`;
+        const { error } = await supabase.storage.from("avatars").upload(path, photoFile, { upsert: true });
+        if (error) throw error;
+        const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+        avatarUrl = data.publicUrl;
+      }
+
+      const { error: profileErr } = await supabase.from("profiles").update({
+        full_name: form.full_name,
+        phone: form.phone,
+        address: form.address,
+        avatar_url: avatarUrl,
+      }).eq("id", userId);
+      if (profileErr) throw profileErr;
+
+      // Manage subscription
+      if (form.plan_id) {
+        const existing = selectedClient.subscription;
+        if (existing) {
+          const { error: subErr } = await supabase.from("subscriptions").update({
+            plan_id: form.plan_id,
+            billing_period: form.billing_period,
+            status: "active",
+          }).eq("user_id", userId);
+          if (subErr) throw subErr;
+        } else {
+          const { error: subErr } = await supabase.from("subscriptions").insert({
+            user_id: userId,
+            plan_id: form.plan_id,
+            billing_period: form.billing_period,
+          });
+          if (subErr) throw subErr;
+        }
+      }
+
+      toast({ title: "Cliente atualizado com sucesso!" });
+      setDialogOpen(false);
+      fetchClients();
+    } catch (error: any) {
+      console.error("Error saving client:", error);
+      toast({ variant: "destructive", title: "Erro ao salvar", description: error.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openEdit = (client: ClientRow) => {
+    setSelectedClient(client);
+    setForm({
+      full_name: client.full_name || "",
+      phone: client.phone || "",
+      address: client.address || "",
+      plan_id: client.subscription?.plan_id || "",
+      billing_period: client.subscription?.billing_period || "monthly",
+    });
+    setPhotoFile(null);
+    setDialogOpen(true);
+  };
+
+  const filteredClients = clients.filter((c) =>
+    c.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.phone?.includes(searchTerm)
+  );
+
+  const getPlanName = (planId: string | null | undefined) => {
+    if (!planId) return "Sem plano";
+    return plans.find((p) => p.id === planId)?.name || "—";
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Gerenciar Clientes</h2>
+        <p className="text-muted-foreground">Cadastros completos com foto e assinatura</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome ou telefone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Foto</TableHead>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>Endereço</TableHead>
+                  <TableHead>Plano</TableHead>
+                  <TableHead>Cadastro</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredClients.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      Nenhum cliente encontrado
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredClients.map((client) => (
+                    <TableRow key={client.id}>
+                      <TableCell>
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={client.avatar_url || undefined} />
+                          <AvatarFallback>{(client.full_name || "C")[0]}</AvatarFallback>
+                        </Avatar>
+                      </TableCell>
+                      <TableCell className="font-medium">{client.full_name || "Sem nome"}</TableCell>
+                      <TableCell>{client.phone || "—"}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{client.address || "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant={client.subscription ? "default" : "outline"}>
+                          {getPlanName(client.subscription?.plan_id)}
+                        </Badge>
+                        {client.subscription && (
+                          <span className="text-xs text-muted-foreground ml-1">
+                            ({client.subscription.billing_period === "annual" ? "Anual" : "Mensal"})
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>{new Date(client.created_at).toLocaleDateString("pt-BR")}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(client)}>
+                          <Eye className="h-4 w-4 mr-1" /> Editar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Cliente</DialogTitle>
+            <DialogDescription>Cadastro completo com foto e plano de assinatura</DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            {/* Photo Upload */}
+            <div className="flex items-center gap-4">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={photoFile ? URL.createObjectURL(photoFile) : selectedClient?.avatar_url || undefined} />
+                <AvatarFallback className="text-lg"><Camera className="h-6 w-6" /></AvatarFallback>
+              </Avatar>
+              <div>
+                <Label>Foto do Cliente</Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  className="mt-1"
+                  onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Nome Completo *</Label>
+              <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Telefone</Label>
+                <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Endereço</Label>
+                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+              </div>
+            </div>
+
+            {/* Subscription */}
+            <div className="space-y-2 p-4 rounded-lg border border-border bg-muted/30">
+              <Label className="font-semibold">Plano de Assinatura</Label>
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <div className="space-y-2">
+                  <Label>Plano</Label>
+                  <Select value={form.plan_id} onValueChange={(v) => setForm({ ...form, plan_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Selecionar plano" /></SelectTrigger>
+                    <SelectContent>
+                      {plans.map((plan) => (
+                        <SelectItem key={plan.id} value={plan.id}>
+                          {plan.name} - R${plan.price}{plan.period || ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Período</Label>
+                  <Select value={form.billing_period} onValueChange={(v) => setForm({ ...form, billing_period: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monthly">Mensal</SelectItem>
+                      <SelectItem value="annual">Anual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Salvando...</> : "Salvar Alterações"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+export default AdminClients;
