@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Settings, Calendar, BarChart3, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Settings, Calendar, BarChart3, LogOut, HeartHandshake, UserCheck } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -20,6 +20,8 @@ import { cn } from "@/lib/utils";
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Usuários", url: "/admin/usuarios", icon: Users },
+  { title: "Cuidadores", url: "/admin/cuidadores", icon: HeartHandshake },
+  { title: "Clientes", url: "/admin/clientes", icon: UserCheck },
   { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar },
   { title: "Relatórios", url: "/admin/relatorios", icon: BarChart3 },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings },

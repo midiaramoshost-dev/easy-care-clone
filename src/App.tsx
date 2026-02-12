@@ -12,6 +12,8 @@ import AdminUsers from "./components/admin/AdminUsers";
 import AdminSchedules from "./components/admin/AdminSchedules";
 import AdminReports from "./components/admin/AdminReports";
 import AdminSettings from "./components/admin/AdminSettings";
+import AdminCaregivers from "./components/admin/AdminCaregivers";
+import AdminClients from "./components/admin/AdminClients";
 import AreaCuidador from "./pages/AreaCuidador";
 import AreaCliente from "./pages/AreaCliente";
 import ComecarAgora from "./pages/ComecarAgora";
@@ -43,6 +45,8 @@ const App = () => (
             >
               <Route index element={<AdminDashboard />} />
               <Route path="usuarios" element={<AdminUsers />} />
+              <Route path="cuidadores" element={<AdminCaregivers />} />
+              <Route path="clientes" element={<AdminClients />} />
               <Route path="agendamentos" element={<AdminSchedules />} />
               <Route path="relatorios" element={<AdminReports />} />
               <Route path="configuracoes" element={<AdminSettings />} />
