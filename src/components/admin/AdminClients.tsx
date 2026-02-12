@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { usePlans } from "@/hooks/usePlans";
-import { Search, Loader2, Eye, Camera, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Loader2, Eye, Camera, ChevronLeft, ChevronRight, Plus, UserPlus } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -33,6 +33,7 @@ export function AdminClients() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedClient, setSelectedClient] = useState<ClientRow | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const { toast } = useToast();
   const { data: plans = [] } = usePlans();
@@ -41,6 +42,8 @@ export function AdminClients() {
     full_name: "",
     phone: "",
     address: "",
+    email: "",
+    password: "",
     plan_id: "",
     billing_period: "monthly",
   });
@@ -99,6 +102,72 @@ export function AdminClients() {
       toast({ variant: "destructive", title: "Nome é obrigatório" });
       return;
     }
+
+    if (isCreating) {
+      if (!form.email.trim() || !form.password.trim()) {
+        toast({ variant: "destructive", title: "Email e senha são obrigatórios para novo cliente" });
+        return;
+      }
+      setSaving(true);
+      try {
+        // Create user via Supabase Auth
+        const { data: authData, error: authErr } = await supabase.auth.signUp({
+          email: form.email,
+          password: form.password,
+          options: { data: { full_name: form.full_name } },
+        });
+        if (authErr) throw authErr;
+        if (!authData.user) throw new Error("Falha ao criar usuário");
+
+        const userId = authData.user.id;
+
+        // Update profile
+        const { error: profileErr } = await supabase.from("profiles").update({
+          full_name: form.full_name,
+          phone: form.phone,
+          address: form.address,
+        }).eq("id", userId);
+        if (profileErr) console.warn("Profile update warning:", profileErr);
+
+        // Assign 'cliente' role
+        const { error: roleErr } = await supabase.rpc("assign_role_to_user", {
+          _user_id: userId,
+          _role: "cliente" as AppRole,
+        });
+        if (roleErr) throw roleErr;
+
+        // Handle photo
+        if (photoFile) {
+          const path = `clients/${userId}/${Date.now()}_${photoFile.name}`;
+          const { error } = await supabase.storage.from("avatars").upload(path, photoFile, { upsert: true });
+          if (!error) {
+            const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+            await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", userId);
+          }
+        }
+
+        // Create subscription if plan selected
+        if (form.plan_id) {
+          await supabase.from("subscriptions").insert({
+            user_id: userId,
+            plan_id: form.plan_id,
+            billing_period: form.billing_period,
+          });
+        }
+
+        toast({ title: "Cliente criado com sucesso!" });
+        setDialogOpen(false);
+        fetchClients();
+      } catch (error: any) {
+        console.error("Error creating client:", error);
+        toast({ variant: "destructive", title: "Erro ao criar cliente", description: error.message });
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    // Edit existing client
     if (!selectedClient) return;
     setSaving(true);
     try {
@@ -121,7 +190,6 @@ export function AdminClients() {
       }).eq("id", userId);
       if (profileErr) throw profileErr;
 
-      // Manage subscription
       if (form.plan_id) {
         const existing = selectedClient.subscription;
         if (existing) {
@@ -152,12 +220,31 @@ export function AdminClients() {
     }
   };
 
+  const openCreate = () => {
+    setSelectedClient(null);
+    setIsCreating(true);
+    setForm({
+      full_name: "",
+      phone: "",
+      address: "",
+      email: "",
+      password: "",
+      plan_id: "",
+      billing_period: "monthly",
+    });
+    setPhotoFile(null);
+    setDialogOpen(true);
+  };
+
   const openEdit = (client: ClientRow) => {
     setSelectedClient(client);
+    setIsCreating(false);
     setForm({
       full_name: client.full_name || "",
       phone: client.phone || "",
       address: client.address || "",
+      email: "",
+      password: "",
       plan_id: client.subscription?.plan_id || "",
       billing_period: client.subscription?.billing_period || "monthly",
     });
@@ -185,9 +272,14 @@ export function AdminClients() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Gerenciar Clientes</h2>
-        <p className="text-muted-foreground">Cadastros completos com foto e assinatura</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Gerenciar Clientes</h2>
+          <p className="text-muted-foreground">Cadastros completos com foto e assinatura</p>
+        </div>
+        <Button onClick={openCreate}>
+          <UserPlus className="h-4 w-4 mr-2" /> Novo Cliente
+        </Button>
       </div>
 
       <Card>
@@ -289,8 +381,8 @@ export function AdminClients() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Editar Cliente</DialogTitle>
-            <DialogDescription>Cadastro completo com foto e plano de assinatura</DialogDescription>
+            <DialogTitle>{isCreating ? "Novo Cliente" : "Editar Cliente"}</DialogTitle>
+            <DialogDescription>{isCreating ? "Preencha os dados para cadastrar um novo cliente" : "Cadastro completo com foto e plano de assinatura"}</DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
@@ -310,6 +402,19 @@ export function AdminClients() {
                 />
               </div>
             </div>
+
+            {isCreating && (
+              <div className="grid grid-cols-2 gap-4 p-4 rounded-lg border border-border bg-muted/30">
+                <div className="space-y-2">
+                  <Label>Email *</Label>
+                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Senha *</Label>
+                  <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Mínimo 6 caracteres" />
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Nome Completo *</Label>
