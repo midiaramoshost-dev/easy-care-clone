@@ -1,163 +1,89 @@
 
 
-# Paridade com Site de Referencia (Exceto Slideshow) + Estrutura Backend
+# Plano Completo: Migrar Estrutura do Backup para o Projeto Atual
 
 ## Resumo
 
-Ajustar todas as secoes da homepage e paginas do projeto para ter paridade exata com o site de referencia `cuidado-facil-landing-44.lovable.app`, **mantendo o slideshow atual intacto**. Tambem criar a estrutura backend completa para suportar planos, agendamentos, avaliacoes e contatos.
+Adicionar as tabelas do backup original (caregivers, elderly, medications, medication_reminders, health_records, diary_entries, user_activities), criar paginas e componentes para gerencia-las, e atualizar o trigger `handle_new_user()` para auto-atribuir admin.
 
 ---
 
-## 1. Ajustes no Frontend (Homepage)
+## Fase 1: Banco de Dados (Migracao SQL)
 
-### 1.1 NewStatsSection
-- Alterar valores: "10.000+" para "500+", "24/7" manter, "98%" manter, "4.9" para "5"
-- Alterar labels: "Familias Atendidas" para "Familias Atendidas", "Monitoramento Continuo" para "Monitoramento", "Taxa de Satisfacao" para "Satisfacao", "Avaliacao Media" para "Avaliacao"
+### 1.1 Novas Tabelas
 
-### 1.2 TrustBadges
-- Alterar texto de confianca: "10.000 familias" para "500 familias"
-- Trocar nomes de empresas por "Empresa 1" a "Empresa 5" (conforme referencia)
-- Manter badges de seguranca (SSL, ISO, LGPD, Uptime) como estao
+- **caregivers** - Dados profissionais do cuidador (especialidade, experiencia, disponibilidade, certificacoes, bio, foto). Referencia `profiles.id`.
+- **elderly** - Cadastro de idosos vinculados a um cliente (nome, data_nascimento, condicoes_medicas, necessidades_especiais, contato_emergencia). Referencia `profiles.id` como responsavel.
+- **medications** - Medicamentos vinculados a um idoso (nome, dosagem, frequencia, horarios, observacoes).
+- **medication_reminders** - Lembretes de medicamento (horario, status: pendente/administrado/ignorado).
+- **health_records** - Registros de saude do idoso (pressao, temperatura, glicemia, peso, observacoes, data).
+- **diary_entries** - Diario de cuidados (entrada de texto do cuidador sobre o dia do idoso, humor, alimentacao, atividades).
+- **user_activities** - Log de atividades do sistema (user_id, acao, detalhes, timestamp).
 
-### 1.3 NewFeaturesSection
-- Reduzir de 8 para 6 features, alinhando com a referencia:
-  - Seguranca Total, Cuidado Humanizado, Equipe Conectada, Relatorios Inteligentes, Disponivel 24/7, Resultados Comprovados
-- Remover: Alertas Personalizados e App Intuitivo
-- Atualizar titulo/subtitulo para "Recursos que fazem a diferenca" / "Tecnologia de ponta aliada ao cuidado humano"
+### 1.2 Politicas RLS
 
-### 1.4 TechnologySection
-- Atualizar titulo: "Tecnologia que cuida"
-- Atualizar descricao para alinhar com referencia
-- Manter features (IA, alertas, analise, relatorios)
+Cada tabela tera politicas para:
+- Admin: acesso total (leitura, escrita, exclusao)
+- Cuidador: leitura/escrita nos idosos que atende (via appointments)
+- Cliente: leitura/escrita nos seus proprios idosos e dados vinculados
 
-### 1.5 NewTestimonialsSection
-- Trocar depoimentos para os da referencia:
-  - Dr. Carlos Mendes (Geriatra - CRM 12345)
-  - Ana Beatriz Santos (Filha e Administradora)
-  - Enfermeira Marcia Silva (Cuidadora Profissional)
-- Atualizar titulo: "Avaliacoes e Depoimentos de Clientes CuidadoFacil"
-- Atualizar subtitulo: "Depoimentos reais de profissionais e familias que transformaram o cuidado"
+### 1.3 Atualizar `handle_new_user()`
 
-### 1.6 PricingSection
-- Manter estrutura atual (ja esta alinhada com referencia)
-- Os planos do backend serao carregados dinamicamente (ver secao 2)
-
-### 1.7 NewCTASection
-- Atualizar texto: "Comece hoje mesmo"
-- Atualizar descricao: "Junte-se a milhares de familias que ja descobriram como cuidar melhor de quem mais amam. Teste gratis por 7 dias."
-- Atualizar rodape: "Sem compromisso - Cancele quando quiser - Suporte incluido"
-
-### 1.8 Header
-- Quando deslogado, mostrar links: Admin, Area do Cuidador, Area do Cliente, Comecar Agora (como na referencia que mostra todos os links)
+Alterar a funcao para atribuir automaticamente a role `admin` para os emails `admin@cuidadofacil.com` e `ramos660@hotmail.com`.
 
 ---
 
-## 2. Estrutura Backend (Tabelas no Banco de Dados)
+## Fase 2: Paginas e Componentes
 
-### 2.1 Tabela `plans` (Planos de assinatura)
-```text
-plans
-- id (uuid, PK)
-- name (text) - "Basico", "Familia", "Profissional"
-- price (numeric) - 0, 49, 99
-- period (text) - null, "/mes", "/mes"
-- description (text)
-- features (jsonb) - array de strings
-- popular (boolean, default false)
-- cta_text (text)
-- active (boolean, default true)
-- sort_order (integer)
-- created_at (timestamptz)
-- updated_at (timestamptz)
-```
-RLS: SELECT para todos (publico), INSERT/UPDATE/DELETE apenas para admins.
+### 2.1 Area do Cliente - Novas abas
 
-### 2.2 Tabela `appointments` (Agendamentos)
-```text
-appointments
-- id (uuid, PK)
-- client_id (uuid, FK profiles)
-- caregiver_id (uuid, FK profiles)
-- scheduled_date (date)
-- start_time (time)
-- end_time (time)
-- type (text) - "Cuidado Diario", "Fisioterapia", etc.
-- status (text, default 'pending') - pending, confirmed, completed, cancelled
-- notes (text, nullable)
-- address (text, nullable)
-- created_at (timestamptz)
-- updated_at (timestamptz)
-```
-RLS: Clientes veem seus proprios, cuidadores veem os atribuidos a eles, admins veem todos.
+- **Meus Idosos**: Listar, cadastrar e editar idosos vinculados ao cliente
+- **Medicamentos**: Gerenciar medicamentos de cada idoso
+- **Saude**: Visualizar registros de saude (preenchidos pelo cuidador)
+- **Diario**: Ler entradas do diario de cuidados
 
-### 2.3 Tabela `reviews` (Avaliacoes)
-```text
-reviews
-- id (uuid, PK)
-- appointment_id (uuid, FK appointments)
-- reviewer_id (uuid, FK profiles)
-- reviewed_id (uuid, FK profiles)
-- rating (integer, 1-5)
-- comment (text, nullable)
-- created_at (timestamptz)
-```
-RLS: Reviewer pode inserir, ambas as partes podem ver, admins veem todos.
+### 2.2 Area do Cuidador - Novas abas
 
-### 2.4 Tabela `contacts` (Mensagens de contato / "Fale Conosco")
-```text
-contacts
-- id (uuid, PK)
-- name (text)
-- email (text)
-- phone (text, nullable)
-- message (text)
-- type (text) - "cliente", "cuidador", "geral"
-- status (text, default 'new') - new, read, replied
-- created_at (timestamptz)
-```
-RLS: INSERT publico (anonimo), SELECT apenas para admins.
+- **Meu Perfil Profissional**: Editar dados de cuidador (especialidade, certificacoes, bio)
+- **Idosos Atendidos**: Lista dos idosos dos agendamentos ativos
+- **Registros de Saude**: Criar/editar registros de saude dos idosos atendidos
+- **Diario**: Escrever entradas de diario sobre os idosos atendidos
+- **Lembretes de Medicamento**: Visualizar e marcar medicamentos como administrados
 
-### 2.5 Seed dos Planos
-Inserir os 3 planos iniciais (Basico, Familia, Profissional) com os dados atuais do PricingSection.
+### 2.3 Admin - Melhorias
+
+- **Dashboard**: Substituir dados estaticos por consultas reais ao banco (contagem de usuarios, agendamentos, etc.)
+- **Atividades Recentes**: Usar tabela `user_activities` para mostrar log real
 
 ---
 
-## 3. Integracao Frontend-Backend
+## Fase 3: Detalhes Tecnicos
 
-### 3.1 PricingSection Dinamico
-- Criar hook `usePlans` que busca planos da tabela `plans` ordenados por `sort_order`
-- Fallback para dados estaticos caso a query falhe
-- Usar `@tanstack/react-query` para cache
+### Migracao SQL (executada via ferramenta de migracao)
 
-### 3.2 Pagina ComecarAgora
-- Integrar formulario com tabela `contacts` para salvar leads
-- Redirecionar para `/auth` apos envio para criar conta
+```text
+Tabelas criadas:
+  caregivers        -> id (uuid, PK, FK profiles.id), specialty, experience_years, availability, certifications, bio, avatar_url, hourly_rate, active, created_at, updated_at
+  elderly           -> id (uuid, PK), responsible_id (FK profiles.id), name, birth_date, medical_conditions, special_needs, emergency_contact, emergency_phone, photo_url, notes, created_at, updated_at
+  medications       -> id (uuid, PK), elderly_id (FK elderly.id), name, dosage, frequency, schedule_times (jsonb), start_date, end_date, notes, active, created_at
+  medication_reminders -> id (uuid, PK), medication_id (FK medications.id), scheduled_time (timestamptz), status (enum: pending/administered/skipped), administered_by (FK profiles.id nullable), notes, created_at
+  health_records    -> id (uuid, PK), elderly_id (FK elderly.id), recorded_by (FK profiles.id), blood_pressure, temperature, blood_sugar, weight, heart_rate, notes, recorded_at, created_at
+  diary_entries     -> id (uuid, PK), elderly_id (FK elderly.id), author_id (FK profiles.id), content, mood, meals, activities, created_at
+  user_activities   -> id (uuid, PK), user_id (FK profiles.id nullable), action, details, created_at
+```
 
----
+### Arquivos a criar/modificar
 
-## Secao Tecnica
+- `src/pages/AreaCliente.tsx` - Adicionar abas: Idosos, Medicamentos, Saude, Diario
+- `src/pages/AreaCuidador.tsx` - Adicionar abas: Perfil Profissional, Idosos, Saude, Diario, Lembretes
+- `src/components/admin/AdminDashboard.tsx` - Consultas reais ao banco
+- Novos componentes auxiliares conforme necessario (formularios de idoso, registros de saude, etc.)
 
-### Arquivos a Criar
-- `src/hooks/usePlans.ts` - Hook para buscar planos
+### Ordem de implementacao
 
-### Arquivos a Modificar
-- `src/components/NewStatsSection.tsx` - Ajustar valores
-- `src/components/TrustBadges.tsx` - Ajustar texto e empresas
-- `src/components/NewFeaturesSection.tsx` - Reduzir para 6 features, atualizar titulos
-- `src/components/TechnologySection.tsx` - Atualizar titulo
-- `src/components/NewTestimonialsSection.tsx` - Trocar depoimentos
-- `src/components/NewCTASection.tsx` - Atualizar textos
-- `src/components/PricingSection.tsx` - Integrar com hook usePlans
-- `src/components/Header.tsx` - Mostrar links de navegacao para nao-logados
-- `src/pages/ComecarAgora.tsx` - Integrar com tabela contacts
-
-### Migracoes SQL
-Uma migracao criando: `plans`, `appointments`, `reviews`, `contacts` com RLS policies e dados seed para planos.
-
-### Ordem de Execucao
-1. Criar migracao SQL (tabelas + RLS + seed)
-2. Criar hook `usePlans`
-3. Atualizar componentes da homepage (paralelo)
-4. Atualizar Header e ComecarAgora
-5. Testar fluxo completo
+1. Migracao SQL (todas as tabelas + RLS + trigger update)
+2. Tipos serao atualizados automaticamente
+3. Componentes da Area do Cliente (idosos e medicamentos primeiro)
+4. Componentes da Area do Cuidador (registros de saude e diario)
+5. Dashboard admin com dados reais
 
