@@ -586,6 +586,42 @@ export type Database = {
           },
         ]
       }
+      payment_settings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          gateway: string
+          id: string
+          public_key: string | null
+          secret_key: string | null
+          settings: Json | null
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          gateway: string
+          id?: string
+          public_key?: string | null
+          secret_key?: string | null
+          settings?: Json | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          gateway?: string
+          id?: string
+          public_key?: string | null
+          secret_key?: string | null
+          settings?: Json | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           active: boolean
