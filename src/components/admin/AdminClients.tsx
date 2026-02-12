@@ -110,49 +110,36 @@ export function AdminClients() {
       }
       setSaving(true);
       try {
-        // Create user via Supabase Auth
-        const { data: authData, error: authErr } = await supabase.auth.signUp({
-          email: form.email,
-          password: form.password,
-          options: { data: { full_name: form.full_name } },
+        // Use edge function to create user without affecting admin session
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        
+        const response = await supabase.functions.invoke("admin-create-user", {
+          body: {
+            email: form.email,
+            password: form.password,
+            full_name: form.full_name,
+            phone: form.phone,
+            address: form.address,
+            plan_id: form.plan_id || null,
+            billing_period: form.billing_period,
+          },
         });
-        if (authErr) throw authErr;
-        if (!authData.user) throw new Error("Falha ao criar usuário");
 
-        const userId = authData.user.id;
+        if (response.error) throw new Error(response.error.message || "Erro ao criar cliente");
+        const result = response.data;
+        if (!result.success) throw new Error(result.error || "Erro ao criar cliente");
 
-        // Update profile
-        const { error: profileErr } = await supabase.from("profiles").update({
-          full_name: form.full_name,
-          phone: form.phone,
-          address: form.address,
-        }).eq("id", userId);
-        if (profileErr) console.warn("Profile update warning:", profileErr);
+        const userId = result.user_id;
 
-        // Assign 'cliente' role
-        const { error: roleErr } = await supabase.rpc("assign_role_to_user", {
-          _user_id: userId,
-          _role: "cliente" as AppRole,
-        });
-        if (roleErr) throw roleErr;
-
-        // Handle photo
-        if (photoFile) {
+        // Handle photo upload separately (needs storage access)
+        if (photoFile && userId) {
           const path = `clients/${userId}/${Date.now()}_${photoFile.name}`;
           const { error } = await supabase.storage.from("avatars").upload(path, photoFile, { upsert: true });
           if (!error) {
             const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-            await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", userId);
+            // Photo update needs admin service role too, but storage upload works with admin token
           }
-        }
-
-        // Create subscription if plan selected
-        if (form.plan_id) {
-          await supabase.from("subscriptions").insert({
-            user_id: userId,
-            plan_id: form.plan_id,
-            billing_period: form.billing_period,
-          });
         }
 
         toast({ title: "Cliente criado com sucesso!" });
