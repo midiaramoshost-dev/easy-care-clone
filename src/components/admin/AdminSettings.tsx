@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Bell, Shield, Palette, Mail } from "lucide-react";
+import { Save, Bell, Shield, Palette, Mail, CreditCard } from "lucide-react";
+import { PaymentSettingsTab } from "./PaymentSettingsTab";
 
 export function AdminSettings() {
   const { toast } = useToast();
@@ -58,6 +59,10 @@ export function AdminSettings() {
           <TabsTrigger value="email" className="gap-2">
             <Mail className="h-4 w-4" />
             Email
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="gap-2">
+            <CreditCard className="h-4 w-4" />
+            Pagamentos
           </TabsTrigger>
         </TabsList>
 
@@ -260,6 +265,9 @@ export function AdminSettings() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="payments">
+          <PaymentSettingsTab />
         </TabsContent>
       </Tabs>
     </div>
