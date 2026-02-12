@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { usePlans } from "@/hooks/usePlans";
-import { Search, Loader2, Eye, Camera } from "lucide-react";
+import { Search, Loader2, Eye, Camera, ChevronLeft, ChevronRight } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -165,10 +165,18 @@ export function AdminClients() {
     setDialogOpen(true);
   };
 
+  const ITEMS_PER_PAGE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
   const filteredClients = clients.filter((c) =>
     c.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.phone?.includes(searchTerm)
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredClients.length / ITEMS_PER_PAGE));
+  const paginatedClients = filteredClients.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  useEffect(() => { setCurrentPage(1); }, [searchTerm]);
 
   const getPlanName = (planId: string | null | undefined) => {
     if (!planId) return "Sem plano";
@@ -220,7 +228,7 @@ export function AdminClients() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredClients.map((client) => (
+                  paginatedClients.map((client) => (
                     <TableRow key={client.id}>
                       <TableCell>
                         <Avatar className="h-10 w-10">
@@ -252,6 +260,27 @@ export function AdminClients() {
                 )}
               </TableBody>
             </Table>
+          )}
+          {filteredClients.length > ITEMS_PER_PAGE && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <span className="text-sm text-muted-foreground">
+                Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredClients.length)} de {filteredClients.length}
+              </span>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
+                  <ChevronLeft className="h-4 w-4" /> Anterior
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1).map((p, idx, arr) => (
+                  <span key={p}>
+                    {idx > 0 && arr[idx - 1] !== p - 1 && <span className="text-muted-foreground px-1">…</span>}
+                    <Button variant={p === currentPage ? "default" : "outline"} size="sm" className="w-9" onClick={() => setCurrentPage(p)}>{p}</Button>
+                  </span>
+                ))}
+                <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                  Próximo <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { usePlans } from "@/hooks/usePlans";
-import { Search, UserPlus, Loader2, Upload, FileText, Eye, Camera } from "lucide-react";
+import { Search, UserPlus, Loader2, Upload, FileText, Eye, Camera, ChevronLeft, ChevronRight } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface CaregiverRow {
@@ -206,10 +206,19 @@ export function AdminCaregivers() {
     }
   };
 
+  const ITEMS_PER_PAGE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
   const filteredCaregivers = caregivers.filter((cg) =>
     cg.profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cg.specialty?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredCaregivers.length / ITEMS_PER_PAGE));
+  const paginatedCaregivers = filteredCaregivers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  // Reset page when search changes
+  useEffect(() => { setCurrentPage(1); }, [searchTerm]);
 
   const getPlanName = (planId: string | null | undefined) => {
     if (!planId) return "Sem plano";
@@ -262,7 +271,7 @@ export function AdminCaregivers() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredCaregivers.map((cg) => (
+                  paginatedCaregivers.map((cg) => (
                     <TableRow key={cg.id}>
                       <TableCell>
                         <Avatar className="h-10 w-10">
@@ -307,6 +316,27 @@ export function AdminCaregivers() {
                 )}
               </TableBody>
             </Table>
+          )}
+          {filteredCaregivers.length > ITEMS_PER_PAGE && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <span className="text-sm text-muted-foreground">
+                Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredCaregivers.length)} de {filteredCaregivers.length}
+              </span>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
+                  <ChevronLeft className="h-4 w-4" /> Anterior
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1).map((p, idx, arr) => (
+                  <span key={p}>
+                    {idx > 0 && arr[idx - 1] !== p - 1 && <span className="text-muted-foreground px-1">…</span>}
+                    <Button variant={p === currentPage ? "default" : "outline"} size="sm" className="w-9" onClick={() => setCurrentPage(p)}>{p}</Button>
+                  </span>
+                ))}
+                <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                  Próximo <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
