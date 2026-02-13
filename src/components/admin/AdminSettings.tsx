@@ -7,11 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Bell, Shield, Palette, Mail, CreditCard, FileText, DollarSign, TrendingUp } from "lucide-react";
+import { Save, Bell, Shield, Palette, Mail, CreditCard, FileText, DollarSign, TrendingUp, MessageSquare } from "lucide-react";
 import { PaymentSettingsTab } from "./PaymentSettingsTab";
 import { FinancialInvoicesTab } from "./FinancialInvoicesTab";
 import { FinancialPaymentsTab } from "./FinancialPaymentsTab";
 import { FinancialRevenueTab } from "./FinancialRevenueTab";
+import { NotificationSettingsTab } from "./NotificationSettingsTab";
 
 export function AdminSettings() {
   const { toast } = useToast();
@@ -66,6 +67,10 @@ export function AdminSettings() {
           <TabsTrigger value="payments" className="gap-2">
             <CreditCard className="h-4 w-4" />
             Chaves API
+          </TabsTrigger>
+          <TabsTrigger value="notification-services" className="gap-2">
+            <MessageSquare className="h-4 w-4" />
+            Envio (Email/Zap)
           </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2">
             <Bell className="h-4 w-4" />
@@ -292,6 +297,9 @@ export function AdminSettings() {
         </TabsContent>
         <TabsContent value="payments">
           <PaymentSettingsTab />
+        </TabsContent>
+        <TabsContent value="notification-services">
+          <NotificationSettingsTab />
         </TabsContent>
       </Tabs>
     </div>
