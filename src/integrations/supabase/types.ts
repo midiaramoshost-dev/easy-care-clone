@@ -642,6 +642,39 @@ export type Database = {
           },
         ]
       }
+      notification_settings: {
+        Row: {
+          api_key: string | null
+          created_at: string
+          enabled: boolean
+          id: string
+          instance_id: string | null
+          service: string
+          settings: Json | null
+          updated_at: string
+        }
+        Insert: {
+          api_key?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          instance_id?: string | null
+          service: string
+          settings?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          instance_id?: string | null
+          service?: string
+          settings?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_settings: {
         Row: {
           created_at: string

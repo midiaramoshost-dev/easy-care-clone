@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Search, FileText, CheckCircle, AlertTriangle, XCircle, Clock } from "lucide-react";
+import { Loader2, Plus, Search, FileText, CheckCircle, AlertTriangle, XCircle, Clock, Send, Mail, MessageSquare } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface InvoiceRow {
   id: string;
@@ -53,7 +54,10 @@ export function FinancialInvoicesTab() {
     description: "",
     reference_month: "",
     status: "pending" as string,
+    sendEmail: false,
+    sendWhatsapp: false,
   });
+  const [sendingNotif, setSendingNotif] = useState<string | null>(null);
 
   // Fetch all clients for the dropdown
   const [clients, setClients] = useState<{ id: string; full_name: string | null }[]>([]);
@@ -91,15 +95,21 @@ export function FinancialInvoicesTab() {
     }
     setSaving(true);
     try {
-      const { error } = await supabase.from("invoices").insert({
+      const { data: newInvoice, error } = await supabase.from("invoices").insert({
         user_id: form.user_id,
         amount: parseFloat(form.amount),
         due_date: form.due_date,
         description: form.description || null,
         reference_month: form.reference_month || null,
         status: form.status as any,
-      });
+      }).select().single();
       if (error) throw error;
+
+      // Send notification if selected
+      if (newInvoice && (form.sendEmail || form.sendWhatsapp)) {
+        await sendNotification(newInvoice.id, form.sendEmail, form.sendWhatsapp);
+      }
+
       toast({ title: "Fatura criada com sucesso!" });
       setDialogOpen(false);
       fetchData();
@@ -107,6 +117,32 @@ export function FinancialInvoicesTab() {
       toast({ variant: "destructive", title: "Erro", description: error.message });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const sendNotification = async (invoiceId: string, email: boolean, whatsapp: boolean) => {
+    setSendingNotif(invoiceId);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("send-invoice-notification", {
+        body: { invoice_id: invoiceId, channels: { email, whatsapp } },
+      });
+
+      if (res.error) {
+        toast({ variant: "destructive", title: "Erro ao enviar notificação", description: String(res.error) });
+      } else {
+        const results = res.data?.results || {};
+        const msgs: string[] = [];
+        if (results.email?.success) msgs.push("Email enviado");
+        if (results.email && !results.email.success) msgs.push(`Email falhou: ${results.email.error}`);
+        if (results.whatsapp?.success) msgs.push("WhatsApp enviado");
+        if (results.whatsapp && !results.whatsapp.success) msgs.push(`WhatsApp falhou: ${results.whatsapp.error}`);
+        toast({ title: "Notificação", description: msgs.join(" | ") || "Enviado" });
+      }
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Erro", description: e.message });
+    } finally {
+      setSendingNotif(null);
     }
   };
 
@@ -134,7 +170,7 @@ export function FinancialInvoicesTab() {
   });
 
   const openCreate = () => {
-    setForm({ user_id: "", amount: "", due_date: "", description: "", reference_month: "", status: "pending" });
+    setForm({ user_id: "", amount: "", due_date: "", description: "", reference_month: "", status: "pending", sendEmail: false, sendWhatsapp: false });
     setDialogOpen(true);
   };
 
@@ -195,7 +231,7 @@ export function FinancialInvoicesTab() {
                             <Icon className="h-3 w-3" /> {sc.label}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="flex items-center gap-2">
                           <Select value={inv.status} onValueChange={(v) => handleStatusChange(inv.id, v)}>
                             <SelectTrigger className="w-[130px] h-8"><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -206,6 +242,16 @@ export function FinancialInvoicesTab() {
                               <SelectItem value="cancelled">Cancelado</SelectItem>
                             </SelectContent>
                           </Select>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8"
+                            disabled={sendingNotif === inv.id}
+                            onClick={() => sendNotification(inv.id, true, true)}
+                            title="Enviar cobrança por Email e WhatsApp"
+                          >
+                            {sendingNotif === inv.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -265,6 +311,31 @@ export function FinancialInvoicesTab() {
             <div className="space-y-2">
               <Label>Descrição</Label>
               <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Ex: Mensalidade plano Premium - Fev/2026" />
+            </div>
+            <div className="space-y-3 border-t pt-4">
+              <Label className="text-sm font-medium">Enviar cobrança ao criar</Label>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="sendEmail"
+                    checked={form.sendEmail}
+                    onCheckedChange={(checked) => setForm({ ...form, sendEmail: checked === true })}
+                  />
+                  <label htmlFor="sendEmail" className="text-sm flex items-center gap-1 cursor-pointer">
+                    <Mail className="h-4 w-4" /> Email
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="sendWhatsapp"
+                    checked={form.sendWhatsapp}
+                    onCheckedChange={(checked) => setForm({ ...form, sendWhatsapp: checked === true })}
+                  />
+                  <label htmlFor="sendWhatsapp" className="text-sm flex items-center gap-1 cursor-pointer">
+                    <MessageSquare className="h-4 w-4" /> WhatsApp
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter>
