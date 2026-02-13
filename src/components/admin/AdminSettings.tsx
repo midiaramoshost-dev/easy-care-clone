@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Bell, Shield, Palette, Mail, CreditCard, FileText, DollarSign, TrendingUp, MessageSquare } from "lucide-react";
+import { Save, Bell, Shield, Palette, Mail, CreditCard, FileText, DollarSign, TrendingUp, MessageSquare, Star } from "lucide-react";
 import { PaymentSettingsTab } from "./PaymentSettingsTab";
+import { AdminPlansTab } from "./AdminPlansTab";
 import { FinancialInvoicesTab } from "./FinancialInvoicesTab";
 import { FinancialPaymentsTab } from "./FinancialPaymentsTab";
 import { FinancialRevenueTab } from "./FinancialRevenueTab";
@@ -51,6 +52,10 @@ export function AdminSettings() {
           <TabsTrigger value="general" className="gap-2">
             <Palette className="h-4 w-4" />
             Geral
+          </TabsTrigger>
+          <TabsTrigger value="plans" className="gap-2">
+            <Star className="h-4 w-4" />
+            Planos
           </TabsTrigger>
           <TabsTrigger value="invoices" className="gap-2">
             <FileText className="h-4 w-4" />
@@ -300,6 +305,9 @@ export function AdminSettings() {
         </TabsContent>
         <TabsContent value="notification-services">
           <NotificationSettingsTab />
+        </TabsContent>
+        <TabsContent value="plans">
+          <AdminPlansTab />
         </TabsContent>
       </Tabs>
     </div>
