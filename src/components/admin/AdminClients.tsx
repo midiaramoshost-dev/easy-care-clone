@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { usePlans } from "@/hooks/usePlans";
-import { Search, Loader2, Eye, Camera, ChevronLeft, ChevronRight, Plus, UserPlus } from "lucide-react";
+import { Search, Loader2, Eye, Camera, ChevronLeft, ChevronRight, Plus, UserPlus, Lock, Ban, ShieldCheck } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -23,6 +23,7 @@ interface ClientRow {
   address: string | null;
   avatar_url: string | null;
   created_at: string;
+  is_banned?: boolean;
   subscription?: { plan_id: string | null; status: string; billing_period: string } | null;
 }
 
@@ -35,6 +36,9 @@ export function AdminClients() {
   const [selectedClient, setSelectedClient] = useState<ClientRow | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [togglingBan, setTogglingBan] = useState(false);
   const { toast } = useToast();
   const { data: plans = [] } = usePlans();
 
@@ -96,6 +100,49 @@ export function AdminClients() {
   };
 
   useEffect(() => { fetchClients(); }, []);
+
+  const handleChangePassword = async () => {
+    if (!selectedClient) return;
+    if (!newPassword || newPassword.length < 6) {
+      toast({ variant: "destructive", title: "Senha deve ter no mínimo 6 caracteres" });
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const response = await supabase.functions.invoke("admin-manage-user", {
+        body: { action: "update_password", user_id: selectedClient.id, password: newPassword },
+      });
+      if (response.error) throw new Error(response.error.message);
+      if (!response.data?.success) throw new Error(response.data?.error || "Erro");
+      toast({ title: "Senha alterada com sucesso!" });
+      setNewPassword("");
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Erro ao alterar senha", description: error.message });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const handleToggleBan = async () => {
+    if (!selectedClient) return;
+    setTogglingBan(true);
+    const action = selectedClient.is_banned ? "unban_user" : "ban_user";
+    try {
+      const response = await supabase.functions.invoke("admin-manage-user", {
+        body: { action, user_id: selectedClient.id },
+      });
+      if (response.error) throw new Error(response.error.message);
+      if (!response.data?.success) throw new Error(response.data?.error || "Erro");
+      const newBanState = !selectedClient.is_banned;
+      setSelectedClient({ ...selectedClient, is_banned: newBanState });
+      toast({ title: newBanState ? "Usuário bloqueado!" : "Usuário desbloqueado!" });
+      fetchClients();
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Erro ao alterar acesso", description: error.message });
+    } finally {
+      setTogglingBan(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!form.full_name.trim()) {
@@ -223,9 +270,10 @@ export function AdminClients() {
     setDialogOpen(true);
   };
 
-  const openEdit = (client: ClientRow) => {
+  const openEdit = async (client: ClientRow) => {
     setSelectedClient(client);
     setIsCreating(false);
+    setNewPassword("");
     setForm({
       full_name: client.full_name || "",
       phone: client.phone || "",
@@ -237,6 +285,16 @@ export function AdminClients() {
     });
     setPhotoFile(null);
     setDialogOpen(true);
+
+    // Fetch ban status
+    try {
+      const response = await supabase.functions.invoke("admin-manage-user", {
+        body: { action: "get_user_status", user_id: client.id },
+      });
+      if (response.data?.success) {
+        setSelectedClient(prev => prev ? { ...prev, is_banned: response.data.is_banned } : prev);
+      }
+    } catch {}
   };
 
   const ITEMS_PER_PAGE = 10;
@@ -448,6 +506,61 @@ export function AdminClients() {
                 </div>
               </div>
             </div>
+
+            {/* Password & Access Control - only for editing */}
+            {!isCreating && selectedClient && (
+              <div className="space-y-4 p-4 rounded-lg border border-border bg-muted/30">
+                <Label className="font-semibold flex items-center gap-2">
+                  <Lock className="h-4 w-4" /> Credenciais & Acesso
+                </Label>
+
+                {/* Change Password */}
+                <div className="space-y-2">
+                  <Label>Nova Senha</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="password"
+                      placeholder="Mínimo 6 caracteres"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleChangePassword}
+                      disabled={changingPassword || !newPassword}
+                    >
+                      {changingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : "Alterar Senha"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Block/Unblock */}
+                <div className="flex items-center justify-between pt-2 border-t border-border">
+                  <div>
+                    <p className="text-sm font-medium">Bloquear Acesso</p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedClient.is_banned
+                        ? "Usuário está BLOQUEADO — não consegue fazer login"
+                        : "Usuário está ativo — pode fazer login normalmente"}
+                    </p>
+                  </div>
+                  <Button
+                    variant={selectedClient.is_banned ? "default" : "destructive"}
+                    size="sm"
+                    onClick={handleToggleBan}
+                    disabled={togglingBan}
+                  >
+                    {togglingBan ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : selectedClient.is_banned ? (
+                      <><ShieldCheck className="h-4 w-4 mr-1" /> Desbloquear</>
+                    ) : (
+                      <><Ban className="h-4 w-4 mr-1" /> Bloquear</>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
