@@ -7,8 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Bell, Shield, Palette, Mail, CreditCard } from "lucide-react";
+import { Save, Bell, Shield, Palette, Mail, CreditCard, FileText, DollarSign, TrendingUp } from "lucide-react";
 import { PaymentSettingsTab } from "./PaymentSettingsTab";
+import { FinancialInvoicesTab } from "./FinancialInvoicesTab";
+import { FinancialPaymentsTab } from "./FinancialPaymentsTab";
+import { FinancialRevenueTab } from "./FinancialRevenueTab";
 
 export function AdminSettings() {
   const { toast } = useToast();
@@ -43,10 +46,26 @@ export function AdminSettings() {
       </div>
 
       <Tabs defaultValue="general" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex flex-wrap">
           <TabsTrigger value="general" className="gap-2">
             <Palette className="h-4 w-4" />
             Geral
+          </TabsTrigger>
+          <TabsTrigger value="invoices" className="gap-2">
+            <FileText className="h-4 w-4" />
+            Faturas
+          </TabsTrigger>
+          <TabsTrigger value="manual-payments" className="gap-2">
+            <DollarSign className="h-4 w-4" />
+            Pagamentos
+          </TabsTrigger>
+          <TabsTrigger value="revenue" className="gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Receitas
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="gap-2">
+            <CreditCard className="h-4 w-4" />
+            Chaves API
           </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2">
             <Bell className="h-4 w-4" />
@@ -59,10 +78,6 @@ export function AdminSettings() {
           <TabsTrigger value="email" className="gap-2">
             <Mail className="h-4 w-4" />
             Email
-          </TabsTrigger>
-          <TabsTrigger value="payments" className="gap-2">
-            <CreditCard className="h-4 w-4" />
-            Pagamentos
           </TabsTrigger>
         </TabsList>
 
@@ -265,6 +280,15 @@ export function AdminSettings() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="invoices">
+          <FinancialInvoicesTab />
+        </TabsContent>
+        <TabsContent value="manual-payments">
+          <FinancialPaymentsTab />
+        </TabsContent>
+        <TabsContent value="revenue">
+          <FinancialRevenueTab />
         </TabsContent>
         <TabsContent value="payments">
           <PaymentSettingsTab />

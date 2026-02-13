@@ -491,6 +491,62 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          due_date: string
+          external_id: string | null
+          gateway: string | null
+          id: string
+          paid_at: string | null
+          reference_month: string | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          due_date: string
+          external_id?: string | null
+          gateway?: string | null
+          id?: string
+          paid_at?: string | null
+          reference_month?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          due_date?: string
+          external_id?: string | null
+          gateway?: string | null
+          id?: string
+          paid_at?: string | null
+          reference_month?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medication_reminders: {
         Row: {
           administered_by: string | null
@@ -621,6 +677,53 @@ export type Database = {
           webhook_url?: string | null
         }
         Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          external_transaction_id: string | null
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          received_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          external_transaction_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          received_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          external_transaction_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          received_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       plans: {
         Row: {
@@ -935,6 +1038,16 @@ export type Database = {
       audit_action_type: "CREATE" | "UPDATE" | "DELETE"
       care_group_role: "responsavel" | "cuidador" | "admin_empresa"
       company_plan_type: "basic" | "premium" | "professional" | "enterprise"
+      invoice_status: "draft" | "pending" | "paid" | "overdue" | "cancelled"
+      payment_method:
+        | "stripe"
+        | "mercado_pago"
+        | "pagseguro"
+        | "pix_manual"
+        | "boleto_manual"
+        | "transferencia"
+        | "dinheiro"
+        | "outro"
       reminder_status: "pending" | "administered" | "skipped"
       shift_status: "scheduled" | "active" | "completed" | "cancelled"
     }
@@ -1068,6 +1181,17 @@ export const Constants = {
       audit_action_type: ["CREATE", "UPDATE", "DELETE"],
       care_group_role: ["responsavel", "cuidador", "admin_empresa"],
       company_plan_type: ["basic", "premium", "professional", "enterprise"],
+      invoice_status: ["draft", "pending", "paid", "overdue", "cancelled"],
+      payment_method: [
+        "stripe",
+        "mercado_pago",
+        "pagseguro",
+        "pix_manual",
+        "boleto_manual",
+        "transferencia",
+        "dinheiro",
+        "outro",
+      ],
       reminder_status: ["pending", "administered", "skipped"],
       shift_status: ["scheduled", "active", "completed", "cancelled"],
     },
