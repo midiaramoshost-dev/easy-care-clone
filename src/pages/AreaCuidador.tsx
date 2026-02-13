@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Calendar, Clock, MapPin, Star, ArrowLeft, User, CheckCircle, XCircle, FileText, Bell, Settings, LogOut, Briefcase, Users, Activity, BookOpen } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Heart, Calendar, Clock, MapPin, Star, ArrowLeft, User, CheckCircle, XCircle, FileText, Bell, Settings, LogOut, Briefcase, Users, Activity, BookOpen, Phone } from "lucide-react";
 import { CaregiverProfileTab } from "@/components/cuidador/CaregiverProfileTab";
 import { CaregiverElderlyTab } from "@/components/cuidador/CaregiverElderlyTab";
 import { CaregiverHealthTab } from "@/components/cuidador/CaregiverHealthTab";
@@ -36,7 +36,7 @@ const AreaCuidador = () => {
     address: profile?.address || "",
   });
 
-  // Fetch appointments for this caregiver
+  // Fetch appointments
   const { data: appointments = [], isLoading: loadingAppointments } = useQuery({
     queryKey: ["caregiver-appointments", user?.id],
     queryFn: async () => {
@@ -51,7 +51,7 @@ const AreaCuidador = () => {
     enabled: !!user,
   });
 
-  // Fetch reviews for this caregiver
+  // Fetch reviews
   const { data: reviews = [] } = useQuery({
     queryKey: ["caregiver-reviews", user?.id],
     queryFn: async () => {
@@ -69,10 +69,7 @@ const AreaCuidador = () => {
   // Update appointment status
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
-        .from("appointments")
-        .update({ status })
-        .eq("id", id);
+      const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -84,16 +81,12 @@ const AreaCuidador = () => {
   // Update profile
   const updateProfile = useMutation({
     mutationFn: async (form: typeof profileForm) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update(form)
-        .eq("id", user!.id);
+      const { error } = await supabase.from("profiles").update(form).eq("id", user!.id);
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Perfil atualizado!");
       setEditingProfile(false);
-      queryClient.invalidateQueries({ queryKey: ["caregiver-appointments"] });
     },
   });
 
@@ -102,7 +95,7 @@ const AreaCuidador = () => {
   const pendingAppointments = appointments.filter((a) => a.status === "pending");
   const completedAppointments = appointments.filter((a) => a.status === "completed");
   const avgRating = reviews.length > 0 ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) : "—";
-  const totalHours = completedAppointments.length * 4; // estimated
+  const nextAppointment = appointments.find((a) => a.status === "pending" || a.status === "confirmed");
 
   const handleSignOut = async () => {
     await signOut();
@@ -120,10 +113,15 @@ const AreaCuidador = () => {
                 Voltar
               </Button>
             </Link>
-            <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
-              <Heart className="w-6 h-6" />
-              Área do Cuidador
-            </h1>
+            <div>
+              <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
+                <Heart className="w-6 h-6" />
+                Área do Cuidador
+              </h1>
+              {profile?.full_name && (
+                <p className="text-sm text-muted-foreground">Olá, {profile.full_name.split(" ")[0]}! 💚</p>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
@@ -135,30 +133,30 @@ const AreaCuidador = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="border-l-4 border-l-primary">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Hoje</CardTitle>
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Hoje</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-primary">{todayAppointments.length}</div>
               <p className="text-xs text-muted-foreground">atendimentos</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-l-4 border-l-amber-500">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle>
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pendentes</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-amber-600">{pendingAppointments.length}</div>
               <p className="text-xs text-muted-foreground">aguardando</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-l-4 border-l-green-500">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Avaliação</CardTitle>
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Avaliação</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-600 flex items-center gap-1">
@@ -167,9 +165,9 @@ const AreaCuidador = () => {
               <p className="text-xs text-muted-foreground">{reviews.length} avaliações</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-l-4 border-l-blue-500">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Concluídos</CardTitle>
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Concluídos</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-blue-600">{completedAppointments.length}</div>
@@ -177,6 +175,28 @@ const AreaCuidador = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Next appointment banner */}
+        {nextAppointment && (
+          <Card className="bg-primary/5 border-primary/20">
+            <CardContent className="py-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Próximo atendimento</p>
+                  <p className="text-sm text-muted-foreground">
+                    {nextAppointment.type} · {new Date(nextAppointment.scheduled_date + "T00:00:00").toLocaleDateString("pt-BR")} · {nextAppointment.start_time.slice(0, 5)} - {nextAppointment.end_time.slice(0, 5)}
+                  </p>
+                </div>
+                <Badge variant={statusMap[nextAppointment.status]?.variant || "outline"}>
+                  {statusMap[nextAppointment.status]?.label || nextAppointment.status}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Tabs defaultValue="agenda" className="space-y-6">
           <TabsList className="flex w-full overflow-x-auto">
@@ -199,63 +219,65 @@ const AreaCuidador = () => {
                   <Calendar className="w-5 h-5 text-primary" />
                   Todos os Atendimentos
                 </CardTitle>
-                <CardDescription>Seus agendamentos ordenados por data</CardDescription>
+                <CardDescription>Seus agendamentos ordenados por data · {appointments.length} total</CardDescription>
               </CardHeader>
               <CardContent>
                 {loadingAppointments ? (
                   <p className="text-muted-foreground text-center py-8">Carregando...</p>
                 ) : appointments.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">Nenhum atendimento encontrado.</p>
+                  <div className="text-center py-12 space-y-3">
+                    <Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto" />
+                    <p className="text-muted-foreground">Nenhum atendimento encontrado.</p>
+                    <p className="text-sm text-muted-foreground">Os agendamentos aparecerão aqui quando clientes solicitarem atendimentos.</p>
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {appointments.map((apt) => (
-                      <div key={apt.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-semibold">{apt.type}</h4>
-                            <Badge variant={statusMap[apt.status]?.variant || "outline"}>
-                              {statusMap[apt.status]?.label || apt.status}
-                            </Badge>
+                      <div key={apt.id} className="rounded-xl border p-4 hover:bg-muted/30 transition-colors">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="space-y-1.5 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-semibold">{apt.type}</h4>
+                              <Badge variant={statusMap[apt.status]?.variant || "outline"}>
+                                {statusMap[apt.status]?.label || apt.status}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                {new Date(apt.scheduled_date + "T00:00:00").toLocaleDateString("pt-BR")}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                {apt.start_time.slice(0, 5)} - {apt.end_time.slice(0, 5)}
+                              </span>
+                            </div>
+                            {apt.address && (
+                              <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <MapPin className="w-4 h-4" /> {apt.address}
+                              </span>
+                            )}
+                            {apt.notes && (
+                              <p className="text-xs text-muted-foreground italic mt-1">📝 {apt.notes}</p>
+                            )}
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              {new Date(apt.scheduled_date + "T00:00:00").toLocaleDateString("pt-BR")}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              {apt.start_time.slice(0, 5)} - {apt.end_time.slice(0, 5)}
-                            </span>
+                          <div className="flex gap-2 shrink-0">
+                            {apt.status === "pending" && (
+                              <>
+                                <Button size="sm" onClick={() => updateStatus.mutate({ id: apt.id, status: "confirmed" })}>
+                                  <CheckCircle className="w-4 h-4 mr-1" /> Confirmar
+                                </Button>
+                                <Button size="sm" variant="destructive" onClick={() => updateStatus.mutate({ id: apt.id, status: "cancelled" })}>
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
+                              </>
+                            )}
+                            {apt.status === "confirmed" && (
+                              <Button size="sm" variant="secondary" onClick={() => updateStatus.mutate({ id: apt.id, status: "completed" })}>
+                                <CheckCircle className="w-4 h-4 mr-1" /> Concluir
+                              </Button>
+                            )}
                           </div>
-                          {apt.address && (
-                            <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <MapPin className="w-4 h-4" />
-                              {apt.address}
-                            </span>
-                          )}
-                          {apt.notes && (
-                            <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <FileText className="w-4 h-4" />
-                              {apt.notes}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          {apt.status === "pending" && (
-                            <>
-                              <Button size="sm" onClick={() => updateStatus.mutate({ id: apt.id, status: "confirmed" })}>
-                                <CheckCircle className="w-4 h-4 mr-1" /> Confirmar
-                              </Button>
-                              <Button size="sm" variant="destructive" onClick={() => updateStatus.mutate({ id: apt.id, status: "cancelled" })}>
-                                <XCircle className="w-4 h-4" />
-                              </Button>
-                            </>
-                          )}
-                          {apt.status === "confirmed" && (
-                            <Button size="sm" variant="secondary" onClick={() => updateStatus.mutate({ id: apt.id, status: "completed" })}>
-                              <CheckCircle className="w-4 h-4 mr-1" /> Concluir
-                            </Button>
-                          )}
                         </div>
                       </div>
                     ))}
@@ -273,40 +295,47 @@ const AreaCuidador = () => {
                   <Bell className="w-5 h-5 text-amber-600" />
                   Atendimentos Pendentes
                 </CardTitle>
-                <CardDescription>Atendimentos que precisam de confirmação</CardDescription>
+                <CardDescription>Atendimentos que precisam de confirmação · {pendingAppointments.length} pendente{pendingAppointments.length !== 1 ? "s" : ""}</CardDescription>
               </CardHeader>
               <CardContent>
                 {pendingAppointments.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">Nenhum atendimento pendente. 🎉</p>
+                  <div className="text-center py-12 space-y-2">
+                    <CheckCircle className="w-10 h-10 text-green-500/30 mx-auto" />
+                    <p className="text-muted-foreground">Nenhum atendimento pendente. 🎉</p>
+                    <p className="text-sm text-muted-foreground">Todos os atendimentos foram respondidos.</p>
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {pendingAppointments.map((apt) => (
-                      <div key={apt.id} className="flex items-center justify-between p-4 rounded-lg border border-amber-200 bg-amber-50">
-                        <div className="space-y-1">
-                          <h4 className="font-semibold">{apt.type}</h4>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              {new Date(apt.scheduled_date + "T00:00:00").toLocaleDateString("pt-BR")}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              {apt.start_time.slice(0, 5)} - {apt.end_time.slice(0, 5)}
-                            </span>
+                      <div key={apt.id} className="rounded-xl border border-amber-200 dark:border-amber-900/30 bg-amber-50 dark:bg-amber-950/10 p-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="space-y-1.5 flex-1">
+                            <h4 className="font-semibold">{apt.type}</h4>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                {new Date(apt.scheduled_date + "T00:00:00").toLocaleDateString("pt-BR")}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                {apt.start_time.slice(0, 5)} - {apt.end_time.slice(0, 5)}
+                              </span>
+                            </div>
+                            {apt.address && (
+                              <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <MapPin className="w-4 h-4" /> {apt.address}
+                              </span>
+                            )}
+                            {apt.notes && <p className="text-xs text-muted-foreground italic">📝 {apt.notes}</p>}
                           </div>
-                          {apt.address && (
-                            <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <MapPin className="w-4 h-4" /> {apt.address}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => updateStatus.mutate({ id: apt.id, status: "confirmed" })}>
-                            <CheckCircle className="w-4 h-4 mr-1" /> Aceitar
-                          </Button>
-                          <Button size="sm" variant="destructive" onClick={() => updateStatus.mutate({ id: apt.id, status: "cancelled" })}>
-                            <XCircle className="w-4 h-4 mr-1" /> Recusar
-                          </Button>
+                          <div className="flex gap-2 shrink-0">
+                            <Button size="sm" onClick={() => updateStatus.mutate({ id: apt.id, status: "confirmed" })}>
+                              <CheckCircle className="w-4 h-4 mr-1" /> Aceitar
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => updateStatus.mutate({ id: apt.id, status: "cancelled" })}>
+                              <XCircle className="w-4 h-4 mr-1" /> Recusar
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -324,27 +353,40 @@ const AreaCuidador = () => {
                   <Star className="w-5 h-5 text-yellow-500" />
                   Minhas Avaliações
                 </CardTitle>
-                <CardDescription>Avaliações recebidas dos clientes</CardDescription>
+                <CardDescription>Avaliações recebidas dos clientes · {reviews.length} total</CardDescription>
               </CardHeader>
               <CardContent>
                 {reviews.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">Nenhuma avaliação recebida ainda.</p>
+                  <div className="text-center py-12 space-y-2">
+                    <Star className="w-10 h-10 text-muted-foreground/30 mx-auto" />
+                    <p className="text-muted-foreground">Nenhuma avaliação recebida ainda.</p>
+                    <p className="text-sm text-muted-foreground">As avaliações aparecerão aqui após os atendimentos concluídos.</p>
+                  </div>
                 ) : (
                   <div className="space-y-4">
+                    {/* Average rating summary */}
+                    <div className="p-4 rounded-xl bg-muted/30 flex items-center gap-4">
+                      <div className="text-4xl font-bold text-yellow-600">{avgRating}</div>
+                      <div>
+                        <div className="flex items-center gap-0.5">
+                          {[1,2,3,4,5].map(n => (
+                            <Star key={n} className={`w-5 h-5 ${n <= Math.round(parseFloat(avgRating as string)) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/20"}`} />
+                          ))}
+                        </div>
+                        <p className="text-sm text-muted-foreground">{reviews.length} avaliação{reviews.length !== 1 ? "ões" : ""}</p>
+                      </div>
+                    </div>
                     {reviews.map((review) => (
-                      <div key={review.id} className="p-4 rounded-lg bg-muted/50">
+                      <div key={review.id} className="p-4 rounded-xl border bg-card">
                         <div className="flex items-center gap-1 mb-2">
                           {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`}
-                            />
+                            <Star key={i} className={`w-5 h-5 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/20"}`} />
                           ))}
-                          <span className="text-sm text-muted-foreground ml-2">
+                          <span className="text-sm text-muted-foreground ml-3">
                             {new Date(review.created_at).toLocaleDateString("pt-BR")}
                           </span>
                         </div>
-                        {review.comment && <p className="text-sm">{review.comment}</p>}
+                        {review.comment && <p className="text-sm mt-1">{review.comment}</p>}
                       </div>
                     ))}
                   </div>
@@ -368,24 +410,15 @@ const AreaCuidador = () => {
                   <div className="space-y-4 max-w-md">
                     <div>
                       <Label>Nome Completo</Label>
-                      <Input
-                        value={profileForm.full_name}
-                        onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
-                      />
+                      <Input value={profileForm.full_name} onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })} />
                     </div>
                     <div>
                       <Label>Telefone</Label>
-                      <Input
-                        value={profileForm.phone}
-                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                      />
+                      <Input value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} placeholder="(00) 00000-0000" />
                     </div>
                     <div>
                       <Label>Endereço</Label>
-                      <Input
-                        value={profileForm.address}
-                        onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
-                      />
+                      <Input value={profileForm.address} onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })} placeholder="Rua, número, bairro, cidade" />
                     </div>
                     <div className="flex gap-2">
                       <Button onClick={() => updateProfile.mutate(profileForm)}>Salvar</Button>
@@ -394,21 +427,31 @@ const AreaCuidador = () => {
                   </div>
                 ) : (
                   <div className="space-y-4 max-w-md">
-                    <div>
-                      <Label className="text-muted-foreground">Email</Label>
-                      <p className="font-medium">{user?.email}</p>
+                    <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="w-8 h-8 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg">{profile?.full_name || "Nome não informado"}</h3>
+                        <p className="text-sm text-muted-foreground">{user?.email}</p>
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-muted-foreground">Nome</Label>
-                      <p className="font-medium">{profile?.full_name || "Não informado"}</p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground">Telefone</Label>
-                      <p className="font-medium">{profile?.phone || "Não informado"}</p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground">Endereço</Label>
-                      <p className="font-medium">{profile?.address || "Não informado"}</p>
+                    <Separator />
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Telefone</p>
+                          <p className="text-sm font-medium">{profile?.phone || "Não informado"}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <MapPin className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Endereço</p>
+                          <p className="text-sm font-medium">{profile?.address || "Não informado"}</p>
+                        </div>
+                      </div>
                     </div>
                     <Button onClick={() => {
                       setProfileForm({

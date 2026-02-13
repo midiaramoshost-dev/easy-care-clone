@@ -4,7 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Briefcase } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Briefcase, Clock, DollarSign, Award, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -63,29 +65,89 @@ export function CaregiverProfileTab() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><Briefcase className="w-5 h-5 text-primary" /> Perfil Profissional</CardTitle>
-        <CardDescription>Suas informações como cuidador</CardDescription>
+        <CardDescription>Suas informações como cuidador profissional</CardDescription>
       </CardHeader>
       <CardContent>
         {editing ? (
-          <div className="space-y-4 max-w-md">
-            <div><Label>Especialidade</Label><Input value={form.specialty} onChange={(e) => setForm({ ...form, specialty: e.target.value })} placeholder="Ex: Geriatria, Alzheimer" /></div>
-            <div><Label>Anos de Experiência</Label><Input type="number" value={form.experience_years} onChange={(e) => setForm({ ...form, experience_years: parseInt(e.target.value) || 0 })} /></div>
-            <div><Label>Disponibilidade</Label><Input value={form.availability} onChange={(e) => setForm({ ...form, availability: e.target.value })} placeholder="Ex: Seg-Sex, 8h-18h" /></div>
-            <div><Label>Valor/Hora (R$)</Label><Input type="number" value={form.hourly_rate} onChange={(e) => setForm({ ...form, hourly_rate: parseFloat(e.target.value) || 0 })} /></div>
-            <div><Label>Bio</Label><Textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Fale sobre você..." /></div>
+          <div className="space-y-4 max-w-lg">
+            <p className="text-sm font-medium text-muted-foreground">Informações Profissionais</p>
+            <div>
+              <Label>Especialidade</Label>
+              <Input value={form.specialty} onChange={(e) => setForm({ ...form, specialty: e.target.value })} placeholder="Ex: Geriatria, Alzheimer, Pós-operatório" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Anos de Experiência</Label>
+                <Input type="number" value={form.experience_years} onChange={(e) => setForm({ ...form, experience_years: parseInt(e.target.value) || 0 })} />
+              </div>
+              <div>
+                <Label>Valor/Hora (R$)</Label>
+                <Input type="number" step="0.01" value={form.hourly_rate} onChange={(e) => setForm({ ...form, hourly_rate: parseFloat(e.target.value) || 0 })} />
+              </div>
+            </div>
+            <div>
+              <Label>Disponibilidade</Label>
+              <Input value={form.availability} onChange={(e) => setForm({ ...form, availability: e.target.value })} placeholder="Ex: Seg-Sex 8h-18h, Sábados manhã" />
+            </div>
+            <Separator />
+            <div>
+              <Label>Sobre Você</Label>
+              <Textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Fale sobre sua experiência, formação, certificações, motivação..." rows={5} />
+            </div>
             <div className="flex gap-2">
-              <Button onClick={() => upsert.mutate()}>Salvar</Button>
+              <Button onClick={() => upsert.mutate()}>Salvar Perfil</Button>
               <Button variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
             </div>
           </div>
+        ) : caregiver ? (
+          <div className="space-y-4 max-w-lg">
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="w-7 h-7 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">{caregiver.specialty || "Cuidador"}</h3>
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  {caregiver.experience_years > 0 && (
+                    <span className="flex items-center gap-1"><Award className="w-3.5 h-3.5" /> {caregiver.experience_years} anos exp.</span>
+                  )}
+                  {caregiver.active && <Badge variant="default" className="text-xs">Ativo</Badge>}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 rounded-lg border">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                  <Clock className="w-4 h-4" /> Disponibilidade
+                </div>
+                <p className="text-sm font-medium">{caregiver.availability || "Não informado"}</p>
+              </div>
+              <div className="p-3 rounded-lg border">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                  <DollarSign className="w-4 h-4" /> Valor/Hora
+                </div>
+                <p className="text-sm font-medium">R$ {caregiver.hourly_rate || 0}</p>
+              </div>
+            </div>
+
+            {caregiver.bio && (
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sobre</p>
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <p className="text-sm leading-relaxed">{caregiver.bio}</p>
+                </div>
+              </div>
+            )}
+
+            <Button onClick={startEdit}>Editar Perfil Profissional</Button>
+          </div>
         ) : (
-          <div className="space-y-4 max-w-md">
-            <div><Label className="text-muted-foreground">Especialidade</Label><p className="font-medium">{caregiver?.specialty || "Não informado"}</p></div>
-            <div><Label className="text-muted-foreground">Experiência</Label><p className="font-medium">{caregiver?.experience_years || 0} anos</p></div>
-            <div><Label className="text-muted-foreground">Disponibilidade</Label><p className="font-medium">{caregiver?.availability || "Não informado"}</p></div>
-            <div><Label className="text-muted-foreground">Valor/Hora</Label><p className="font-medium">R$ {caregiver?.hourly_rate || 0}</p></div>
-            <div><Label className="text-muted-foreground">Bio</Label><p className="font-medium">{caregiver?.bio || "Não informado"}</p></div>
-            <Button onClick={startEdit}>{caregiver ? "Editar Perfil" : "Criar Perfil Profissional"}</Button>
+          <div className="text-center py-12 space-y-3">
+            <Briefcase className="w-12 h-12 text-muted-foreground/30 mx-auto" />
+            <p className="text-muted-foreground">Perfil profissional não configurado.</p>
+            <p className="text-sm text-muted-foreground">Configure seu perfil para que clientes conheçam suas qualificações.</p>
+            <Button onClick={startEdit}>Criar Perfil Profissional</Button>
           </div>
         )}
       </CardContent>
