@@ -138,6 +138,36 @@ const TermsOfServiceModal = ({ open, onClose, onAccept, planName }: TermsOfServi
             </section>
 
             <section>
+              <h3 className="font-semibold text-base mb-2">6.1 Câmeras em Regime de Comodato</h3>
+              <p className="text-muted-foreground leading-relaxed mb-2">
+                Quando o plano contratado incluir câmeras <strong>fornecidas pela CuidadoFácil</strong>, os equipamentos serão cedidos ao Contratante em regime de <strong>comodato</strong>, nos termos dos <strong>Arts. 579 a 585 do Código Civil Brasileiro (Lei nº 10.406/2002)</strong>, observando as seguintes condições:
+              </p>
+              <ul className="text-muted-foreground space-y-2 leading-relaxed list-disc list-inside">
+                <li>
+                  <strong>Prazo mínimo de vigência:</strong> o contrato de comodato terá duração mínima de <strong>6 (seis) meses</strong> a partir da data de instalação, independentemente do número de câmeras contratadas;
+                </li>
+                <li>
+                  <strong>Formalização obrigatória:</strong> as condições do comodato — número de equipamentos, prazo, local de instalação e responsabilidades — deverão constar expressamente no <strong>contrato de prestação de serviços</strong> assinado entre as partes antes da instalação;
+                </li>
+                <li>
+                  <strong>Propriedade dos equipamentos:</strong> as câmeras e demais equipamentos permanecem de propriedade exclusiva da CuidadoFácil durante todo o período do comodato, sendo vedada sua alienação, cessão ou modificação pelo Contratante;
+                </li>
+                <li>
+                  <strong>Conservação e responsabilidade:</strong> o Contratante é responsável pela guarda e conservação dos equipamentos em bom estado, respondendo por danos, perda ou furto durante o período de comodato (Art. 582, CC);
+                </li>
+                <li>
+                  <strong>Devolução antecipada:</strong> em caso de rescisão antes do prazo mínimo de 6 meses, o Contratante ficará sujeito à cobrança de <strong>multa contratual proporcional</strong> ao período remanescente, a ser especificada no contrato individual;
+                </li>
+                <li>
+                  <strong>Devolução ao término:</strong> ao final do contrato, os equipamentos deverão ser devolvidos à CuidadoFácil em plenas condições de funcionamento, no prazo estabelecido em contrato.
+                </li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed mt-2 text-xs bg-muted/60 rounded-md p-2 border border-border">
+                ⚠️ <strong>Atenção:</strong> A assinatura do contrato de prestação de serviços com cláusula de comodato é condição indispensável para a instalação das câmeras. O aceite destes Termos não substitui o contrato formal exigido pela legislação.
+              </p>
+            </section>
+
+            <section>
               <h3 className="font-semibold text-base mb-2">7. Dados Sensíveis de Saúde</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Informações de saúde dos beneficiários são consideradas <strong>dados sensíveis</strong> nos termos do Art. 11 da LGPD e serão tratadas com medidas de segurança reforçadas, sendo acessadas apenas por profissionais autorizados e estritamente necessários para a prestação do serviço.
