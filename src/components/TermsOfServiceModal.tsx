@@ -105,35 +105,68 @@ const TermsOfServiceModal = ({ open, onClose, onAccept, planName }: TermsOfServi
             </section>
 
             <section>
-              <h3 className="font-semibold text-base mb-2">6. Dados Sensíveis de Saúde</h3>
+              <h3 className="font-semibold text-base mb-2">6. Monitoramento por Câmeras — Legislação Aplicável</h3>
+              <p className="text-muted-foreground leading-relaxed mb-2">
+                O monitoramento por câmeras é regido pelas seguintes normas brasileiras:
+              </p>
+              <ul className="text-muted-foreground space-y-2 leading-relaxed list-disc list-inside">
+                <li>
+                  <strong>Constituição Federal, Art. 5º, X e XII:</strong> garante a inviolabilidade da intimidade, vida privada, honra e imagem das pessoas, bem como o sigilo das comunicações;
+                </li>
+                <li>
+                  <strong>Lei nº 9.296/1996 (Lei das Interceptações):</strong> proíbe a interceptação de comunicações sem autorização judicial; o monitoramento visual (câmeras) em ambientes privados exige consentimento expresso do titular;
+                </li>
+                <li>
+                  <strong>Lei nº 13.709/2018 — LGPD, Art. 7º e 11:</strong> imagens captadas por câmeras são dados pessoais e, quando vinculadas a pessoa identificável, exigem base legal adequada (consentimento ou legítimo interesse). O Contratante, ao instalar câmeras no ambiente do beneficiário, assume a condição de <em>controlador de dados</em>;
+                </li>
+                <li>
+                  <strong>Resolução ANPD nº 2/2022:</strong> define obrigações de transparência e segurança no tratamento de dados captados por sistemas de videovigilância;
+                </li>
+                <li>
+                  <strong>Lei nº 12.965/2014 — Marco Civil da Internet, Art. 3º:</strong> assegura proteção dos dados pessoais, na forma da lei, incluindo dados transmitidos via sistemas de câmeras conectadas à internet;
+                </li>
+                <li>
+                  <strong>NR-17 / Portaria MTE:</strong> em ambientes de trabalho, o monitoramento por câmera deve ser comunicado previamente aos trabalhadores (cuidadores), vedado o uso para vigilância abusiva;
+                </li>
+                <li>
+                  <strong>Código Penal, Art. 216-B:</strong> tipifica como crime a filmagem não autorizada de pessoa em situação de nudez ou intimidade, com pena de reclusão de 1 a 4 anos.
+                </li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed mt-2">
+                <strong>Responsabilidade do Contratante:</strong> ao contratar o serviço de monitoramento, o Contratante declara que <strong>todos os residentes e profissionais presentes no local foram informados e consentiram</strong> com a instalação e operação das câmeras, isentando a CuidadoFácil de qualquer responsabilidade por uso indevido do sistema.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">7. Dados Sensíveis de Saúde</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Informações de saúde dos beneficiários são consideradas <strong>dados sensíveis</strong> nos termos do Art. 11 da LGPD e serão tratadas com medidas de segurança reforçadas, sendo acessadas apenas por profissionais autorizados e estritamente necessários para a prestação do serviço.
               </p>
             </section>
 
             <section>
-              <h3 className="font-semibold text-base mb-2">7. Cancelamento e Rescisão</h3>
+              <h3 className="font-semibold text-base mb-2">8. Cancelamento e Rescisão</h3>
               <p className="text-muted-foreground leading-relaxed">
                 O serviço poderá ser cancelado a qualquer momento pelo Contratante, com efeito ao final do ciclo de cobrança vigente. A empresa poderá rescindir o contrato em caso de descumprimento destes termos, uso indevido da plataforma ou inadimplência superior a 30 dias, sem prejuízo das medidas legais cabíveis.
               </p>
             </section>
 
             <section>
-              <h3 className="font-semibold text-base mb-2">8. Responsabilidade Limitada</h3>
+              <h3 className="font-semibold text-base mb-2">9. Responsabilidade Limitada</h3>
               <p className="text-muted-foreground leading-relaxed">
                 A plataforma atua como intermediadora entre clientes e cuidadores. A responsabilidade por danos decorrentes da prestação direta do serviço de cuidado é do cuidador contratado, não sendo a plataforma responsável por atos, omissões ou danos causados por terceiros, salvo nas hipóteses previstas no <strong>Código de Defesa do Consumidor</strong>.
               </p>
             </section>
 
             <section>
-              <h3 className="font-semibold text-base mb-2">9. Foro e Legislação Aplicável</h3>
+              <h3 className="font-semibold text-base mb-2">10. Foro e Legislação Aplicável</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Este Termo é regido pelas leis da <strong>República Federativa do Brasil</strong>. Fica eleito o foro da comarca do domicílio do Contratante para dirimir quaisquer controvérsias, conforme Art. 101, I do Código de Defesa do Consumidor.
               </p>
             </section>
 
             <section>
-              <h3 className="font-semibold text-base mb-2">10. Contato com o Encarregado (DPO)</h3>
+              <h3 className="font-semibold text-base mb-2">11. Contato com o Encarregado (DPO)</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Para exercer seus direitos como titular de dados ou esclarecer dúvidas sobre este Termo, entre em contato com nosso Encarregado de Proteção de Dados (DPO) pelo e-mail: <strong>privacidade@cuidadofacil.com.br</strong>
               </p>
