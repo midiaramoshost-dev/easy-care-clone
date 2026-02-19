@@ -41,8 +41,9 @@ const Header = () => {
       <div className="container-custom mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center">
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              CuidadoFácil
+            <span className="flex items-baseline gap-0.5">
+              <span className="text-xl font-black tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Cuidado</span>
+              <span className="text-xl font-light tracking-widest text-foreground/80">Fácil</span>
             </span>
           </Link>
 
