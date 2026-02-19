@@ -1,17 +1,28 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Check, Camera } from "lucide-react";
+import { Check, Camera, Wrench, ShoppingBag } from "lucide-react";
 import { usePlans } from "@/hooks/usePlans";
 import { useState } from "react";
 
 const PricingSection = () => {
   const { data: plans = [] } = usePlans();
   const [category, setCategory] = useState<"care" | "cameras">("care");
+  const [cameraType, setCameraType] = useState<"our" | "client">("our");
 
   const carePlans = plans.filter((p) => !p.name.toLowerCase().includes("monitor"));
-  const cameraPlans = plans.filter((p) => p.name.toLowerCase().includes("monitor"));
+  const allCameraPlans = plans.filter((p) => p.name.toLowerCase().includes("monitor"));
 
-  const activePlans = category === "care" ? carePlans : cameraPlans;
+  // "Monitor Pro" = câmeras instaladas por nós; "Monitor Eco" = câmeras do cliente
+  const ourCameraPlans = allCameraPlans.filter((p) => p.name.toLowerCase().includes("pro"));
+  const clientCameraPlans = allCameraPlans.filter((p) => p.name.toLowerCase().includes("eco"));
+  // fallback: se não houver distinção pro/eco, mostrar todos
+  const hasCameraTypes = ourCameraPlans.length > 0 || clientCameraPlans.length > 0;
+
+  const activeCameraPlans = hasCameraTypes
+    ? cameraType === "our" ? ourCameraPlans : clientCameraPlans
+    : allCameraPlans;
+
+  const activePlans = category === "care" ? carePlans : activeCameraPlans;
 
   const getDisplayPrice = (price: number, period: string | null) => {
     if (price === 0 && !period) return "Sob Consulta";
@@ -64,6 +75,46 @@ const PricingSection = () => {
               Monitoramento por Câmeras
             </button>
           </div>
+
+          {/* Camera sub-toggle */}
+          {category === "cameras" && hasCameraTypes && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-5 flex flex-col items-center gap-2"
+            >
+              <p className="text-sm text-muted-foreground font-medium">Como serão as câmeras?</p>
+              <div className="inline-flex items-center gap-1 p-1 bg-card border border-border rounded-full shadow-sm">
+                <button
+                  onClick={() => setCameraType("our")}
+                  className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                    cameraType === "our"
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Wrench className="h-3.5 w-3.5" />
+                  Instaladas por nós
+                </button>
+                <button
+                  onClick={() => setCameraType("client")}
+                  className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                    cameraType === "client"
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <ShoppingBag className="h-3.5 w-3.5" />
+                  Câmeras do contratante
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground max-w-md text-center">
+                {cameraType === "our"
+                  ? "Inclui aquisição, instalação e configuração das câmeras pela nossa equipe."
+                  : "Você já possui as câmeras. Oferecemos apenas o serviço de monitoramento e acesso remoto."}
+              </p>
+            </motion.div>
+          )}
         </motion.div>
 
         <div
