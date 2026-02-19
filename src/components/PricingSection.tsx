@@ -3,10 +3,25 @@ import { Button } from "@/components/ui/button";
 import { Check, Camera, Wrench, ShoppingBag } from "lucide-react";
 import { usePlans } from "@/hooks/usePlans";
 import { useState } from "react";
+import TermsOfServiceModal from "@/components/TermsOfServiceModal";
+import { useNavigate } from "react-router-dom";
 
 const PricingSection = () => {
   const { data: plans = [] } = usePlans();
   const [category, setCategory] = useState<"care" | "cameras">("care");
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<{ name: string; cta_text: string } | null>(null);
+  const navigate = useNavigate();
+
+  const handlePlanClick = (plan: { name: string; cta_text: string }) => {
+    setSelectedPlan(plan);
+    setTermsOpen(true);
+  };
+
+  const handleTermsAccept = () => {
+    setTermsOpen(false);
+    navigate("/comecar-agora");
+  };
   const [cameraType, setCameraType] = useState<"our" | "client">("our");
 
   const carePlans = plans.filter((p) => !p.name.toLowerCase().includes("monitor"));
@@ -170,6 +185,7 @@ const PricingSection = () => {
               </ul>
 
               <Button
+                onClick={() => handlePlanClick(plan)}
                 className={`w-full h-11 rounded-xl font-semibold ${
                   plan.popular
                     ? "bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground shadow-lg"
@@ -182,6 +198,13 @@ const PricingSection = () => {
           ))}
         </div>
       </div>
+
+      <TermsOfServiceModal
+        open={termsOpen}
+        onClose={() => setTermsOpen(false)}
+        onAccept={handleTermsAccept}
+        planName={selectedPlan?.name ?? ""}
+      />
     </section>
   );
 };
