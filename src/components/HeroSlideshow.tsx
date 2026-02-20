@@ -110,9 +110,9 @@ const HeroSlideshow = () => {
             className="w-full h-full object-cover"
           />
           {/* Dark overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-foreground/85 via-foreground/70 to-foreground/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/50 to-foreground/25" />
           {/* Accent gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-accent/10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/5" />
         </motion.div>
       </AnimatePresence>
 
@@ -138,7 +138,7 @@ const HeroSlideshow = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.15 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-8"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/8 backdrop-blur-sm border border-white/15 mb-8"
               >
                 <slide.icon className="w-4 h-4 text-primary" />
                 <span className="text-sm font-medium text-white/90">{slide.badge}</span>
@@ -161,7 +161,7 @@ const HeroSlideshow = () => {
               <div className="flex flex-wrap gap-4">
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground gap-2 px-8 h-14 text-lg rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
+                  className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground gap-2 px-8 h-14 text-lg rounded-xl shadow-md transition-all"
                 >
                   {slide.cta}
                   <ArrowRight className="w-5 h-5" />

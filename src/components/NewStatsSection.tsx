@@ -44,8 +44,8 @@ const NewStatsSection = () => {
               transition={{ delay: index * 0.1 }}
               className="text-center p-6 rounded-2xl bg-background/50 backdrop-blur-sm border border-border/50 hover:border-primary/30 transition-all group"
             >
-              <div className={`w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                <stat.icon className="w-7 h-7 text-primary-foreground" />
+              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                <stat.icon className="w-7 h-7 text-primary" />
               </div>
               <div className="text-3xl md:text-4xl font-bold text-foreground mb-1">
                 {stat.value}
