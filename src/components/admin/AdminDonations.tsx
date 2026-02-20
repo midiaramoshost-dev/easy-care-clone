@@ -9,12 +9,36 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Heart, TrendingUp, DollarSign, Users, Search, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import { format, parseISO, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "Pendente", variant: "secondary" },
   paid: { label: "Pago", variant: "default" },
   failed: { label: "Falhou", variant: "destructive" },
   refunded: { label: "Estornado", variant: "outline" },
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  paid: "hsl(var(--primary))",
+  pending: "hsl(var(--muted-foreground))",
+  failed: "hsl(var(--destructive))",
+  refunded: "hsl(var(--accent))",
 };
 
 export function AdminDonations() {
@@ -47,11 +71,54 @@ export function AdminDonations() {
   const pendingAmount = donations.reduce((sum, d) => (d.status === "pending" ? sum + Number(d.amount) : sum), 0);
   const totalDonors = new Set(donations.map((d) => d.donor_email)).size;
 
+  // ── Chart data ──────────────────────────────────────────────
+  // Monthly trend (last 6 months)
+  const monthlyData = (() => {
+    const months = eachMonthOfInterval({
+      start: subMonths(new Date(), 5),
+      end: new Date(),
+    });
+    return months.map((month) => {
+      const label = format(month, "MMM/yy", { locale: ptBR });
+      const monthStr = format(month, "yyyy-MM");
+      const monthDonations = donations.filter(
+        (d) => d.created_at.startsWith(monthStr) && d.status === "paid"
+      );
+      return {
+        month: label,
+        total: monthDonations.reduce((s, d) => s + Number(d.amount), 0),
+        quantidade: monthDonations.length,
+      };
+    });
+  })();
+
+  // Status breakdown (pie)
+  const statusData = Object.entries(
+    donations.reduce<Record<string, number>>((acc, d) => {
+      acc[d.status] = (acc[d.status] || 0) + 1;
+      return acc;
+    }, {})
+  ).map(([status, count]) => ({
+    name: statusLabels[status]?.label || status,
+    value: count,
+    color: STATUS_COLORS[status] || "hsl(var(--muted))",
+  }));
+
+  // Top donors (bar chart)
+  const topDonors = Object.entries(
+    donations
+      .filter((d) => d.status === "paid")
+      .reduce<Record<string, number>>((acc, d) => {
+        acc[d.donor_name] = (acc[d.donor_name] || 0) + Number(d.amount);
+        return acc;
+      }, {})
+  )
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, total]) => ({ name, total }));
+
   const handleMarkPaid = async (id: string) => {
-    const { error } = await supabase
-      .from("donations")
-      .update({ status: "paid" })
-      .eq("id", id);
+    const { error } = await supabase.from("donations").update({ status: "paid" }).eq("id", id);
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } else {
@@ -61,10 +128,7 @@ export function AdminDonations() {
   };
 
   const handleMarkFailed = async (id: string) => {
-    const { error } = await supabase
-      .from("donations")
-      .update({ status: "failed" })
-      .eq("id", id);
+    const { error } = await supabase.from("donations").update({ status: "failed" }).eq("id", id);
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } else {
@@ -75,6 +139,7 @@ export function AdminDonations() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Doações</h2>
@@ -86,7 +151,7 @@ export function AdminDonations() {
         </Button>
       </div>
 
-      {/* Stats */}
+      {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -133,6 +198,107 @@ export function AdminDonations() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Charts */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* Area chart — monthly revenue */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base">Arrecadação Mensal (Confirmadas)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {monthlyData.every((m) => m.total === 0) ? (
+              <div className="flex items-center justify-center h-48 text-muted-foreground text-sm">
+                Nenhuma doação confirmada ainda.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={monthlyData}>
+                  <defs>
+                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `R$${v}`} />
+                  <Tooltip
+                    formatter={(value: number) => [`R$ ${value.toFixed(2)}`, "Total"]}
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    fill="url(#colorTotal)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Pie chart — status breakdown */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Doações por Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {statusData.length === 0 ? (
+              <div className="flex items-center justify-center h-48 text-muted-foreground text-sm">
+                Sem dados ainda.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={55}
+                    outerRadius={80}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {statusData.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+                  />
+                  <Legend iconType="circle" iconSize={10} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top donors bar chart */}
+      {topDonors.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Top 5 Doadores (por valor confirmado)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={topDonors} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={(v) => `R$${v}`} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={120} />
+                <Tooltip
+                  formatter={(value: number) => [`R$ ${value.toFixed(2)}`, "Total doado"]}
+                  contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+                />
+                <Bar dataKey="total" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
