@@ -1,10 +1,27 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Calendar, BarChart3, TrendingUp, Activity, Heart, Send, Clock, Wallet } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Users, Calendar, BarChart3, TrendingUp, Activity, Heart, Send, Clock, Wallet, Building2, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+
+type Repasse = {
+  institution_id: string;
+  amount: number;
+  status: string;
+};
+
+type Institution = {
+  id: string;
+  name: string;
+  active: boolean;
+};
 
 export function AdminDashboard() {
+  const [instFilter, setInstFilter] = useState("all");
+
   const { data: profilesCount = 0 } = useQuery({
     queryKey: ["admin-profiles-count"],
     queryFn: async () => {
@@ -44,26 +61,30 @@ export function AdminDashboard() {
     },
   });
 
-  const { data: donationStats = { totalDonated: 0, totalRepassed: 0, pendingRepasses: 0, balance: 0 } } = useQuery({
-    queryKey: ["admin-donation-stats"],
+  const { data: donations = [] } = useQuery({
+    queryKey: ["admin-donations-raw"],
     queryFn: async () => {
-      const [donationsRes, repassesRes] = await Promise.all([
-        supabase.from("donations").select("amount, status"),
-        supabase.from("repasses").select("amount, status"),
-      ]);
-      if (donationsRes.error) throw donationsRes.error;
-      if (repassesRes.error) throw repassesRes.error;
+      const { data, error } = await supabase.from("donations").select("amount, status");
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
-      const totalDonated = (donationsRes.data || []).reduce(
-        (s, d) => d.status === "paid" ? s + Number(d.amount) : s, 0
-      );
-      const totalRepassed = (repassesRes.data || []).reduce(
-        (s, r) => r.status === "paid" ? s + Number(r.amount) : s, 0
-      );
-      const pendingRepasses = (repassesRes.data || []).reduce(
-        (s, r) => r.status === "pending" ? s + Number(r.amount) : s, 0
-      );
-      return { totalDonated, totalRepassed, pendingRepasses, balance: totalDonated - totalRepassed };
+  const { data: repasses = [] } = useQuery({
+    queryKey: ["admin-repasses-raw"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("repasses").select("institution_id, amount, status");
+      if (error) throw error;
+      return (data || []) as Repasse[];
+    },
+  });
+
+  const { data: institutions = [] } = useQuery({
+    queryKey: ["institutions"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("institutions").select("id, name, active").order("name");
+      if (error) throw error;
+      return (data || []) as Institution[];
     },
   });
 
@@ -80,10 +101,21 @@ export function AdminDashboard() {
     },
   });
 
+  // ── Filtered stats ──────────────────────────────────────────────────────────
+  const filteredRepasses = instFilter === "all"
+    ? repasses
+    : repasses.filter((r) => r.institution_id === instFilter);
+
+  const totalDonated = donations.reduce((s, d) => d.status === "paid" ? s + Number(d.amount) : s, 0);
+  const totalRepassed = filteredRepasses.reduce((s, r) => r.status === "paid" ? s + Number(r.amount) : s, 0);
+  const pendingRepasses = filteredRepasses.reduce((s, r) => r.status === "pending" ? s + Number(r.amount) : s, 0);
+  const balance = totalDonated - repasses.reduce((s, r) => r.status === "paid" ? s + Number(r.amount) : s, 0);
+
+  const repassedPct = totalDonated > 0 ? Math.min(100, (totalRepassed / totalDonated) * 100) : 0;
+
+  const selectedInst = institutions.find((i) => i.id === instFilter);
+
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
-  const repassedPct = donationStats.totalDonated > 0
-    ? Math.min(100, (donationStats.totalRepassed / donationStats.totalDonated) * 100)
-    : 0;
 
   const stats = [
     { title: "Total de Usuários", value: String(profilesCount), change: "cadastrados", icon: Users },
@@ -115,12 +147,35 @@ export function AdminDashboard() {
         ))}
       </div>
 
-      {/* Donations & Repasses KPIs */}
+      {/* Donations & Repasses section */}
       <div>
-        <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
-          <Heart className="h-4 w-4 text-primary" />
-          Doações e Repasses
-        </h3>
+        {/* Section header with filter */}
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-base font-semibold flex items-center gap-2">
+            <Heart className="h-4 w-4 text-primary" />
+            Doações e Repasses
+            {instFilter !== "all" && selectedInst && (
+              <Badge variant="secondary" className="ml-1 font-normal">
+                <Building2 className="h-3 w-3 mr-1" />{selectedInst.name}
+              </Badge>
+            )}
+          </h3>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={instFilter} onValueChange={setInstFilter}>
+              <SelectTrigger className="w-[220px] bg-background">
+                <SelectValue placeholder="Filtrar por instituição" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="all">Todas as instituições</SelectItem>
+                {institutions.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -128,19 +183,23 @@ export function AdminDashboard() {
               <Heart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">{fmt(donationStats.totalDonated)}</div>
-              <p className="text-xs text-muted-foreground">Doações confirmadas</p>
+              <div className="text-2xl font-bold text-primary">{fmt(totalDonated)}</div>
+              <p className="text-xs text-muted-foreground">Pool total de doações confirmadas</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Repassado</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {instFilter === "all" ? "Total Repassado" : "Repassado à Instituição"}
+              </CardTitle>
               <Send className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{fmt(donationStats.totalRepassed)}</div>
-              <p className="text-xs text-muted-foreground">Transferências pagas</p>
+              <div className="text-2xl font-bold">{fmt(totalRepassed)}</div>
+              <p className="text-xs text-muted-foreground">
+                {instFilter === "all" ? "Todas as transferências pagas" : `Pago a ${selectedInst?.name}`}
+              </p>
             </CardContent>
           </Card>
 
@@ -150,8 +209,10 @@ export function AdminDashboard() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{fmt(donationStats.pendingRepasses)}</div>
-              <p className="text-xs text-muted-foreground">Aguardando confirmação</p>
+              <div className="text-2xl font-bold">{fmt(pendingRepasses)}</div>
+              <p className="text-xs text-muted-foreground">
+                {instFilter === "all" ? "Aguardando confirmação" : `Pendente para ${selectedInst?.name}`}
+              </p>
             </CardContent>
           </Card>
 
@@ -161,27 +222,67 @@ export function AdminDashboard() {
               <Wallet className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${donationStats.balance > 0 ? "text-primary" : ""}`}>
-                {fmt(donationStats.balance)}
-              </div>
-              <p className="text-xs text-muted-foreground">Para novos repasses</p>
+              <div className={`text-2xl font-bold ${balance > 0 ? "text-primary" : ""}`}>{fmt(balance)}</div>
+              <p className="text-xs text-muted-foreground">Total arrecadado − repassado</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Progress bar */}
-        {donationStats.totalDonated > 0 && (
+        {totalDonated > 0 && (
           <Card className="mt-4">
             <CardContent className="pt-5 pb-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Progresso de repasse às instituições</span>
+                <span className="text-sm font-medium">
+                  {instFilter === "all"
+                    ? "Progresso de repasse — todas as instituições"
+                    : `Progresso de repasse — ${selectedInst?.name}`}
+                </span>
                 <span className="text-sm font-semibold text-primary">{repassedPct.toFixed(1)}%</span>
               </div>
               <Progress value={repassedPct} className="h-2" />
               <div className="flex justify-between mt-2">
-                <span className="text-xs text-muted-foreground">Repassado: {fmt(donationStats.totalRepassed)}</span>
-                <span className="text-xs text-muted-foreground">Arrecadado: {fmt(donationStats.totalDonated)}</span>
+                <span className="text-xs text-muted-foreground">Repassado: {fmt(totalRepassed)}</span>
+                <span className="text-xs text-muted-foreground">Arrecadado: {fmt(totalDonated)}</span>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Per-institution breakdown (visible only when "all" selected and there are institutions with repasses) */}
+        {instFilter === "all" && institutions.length > 0 && repasses.length > 0 && (
+          <Card className="mt-4">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Building2 className="h-4 w-4" />Por Instituição
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {institutions
+                .map((inst) => {
+                  const instRepasses = repasses.filter((r) => r.institution_id === inst.id);
+                  const paid = instRepasses.filter((r) => r.status === "paid").reduce((s, r) => s + Number(r.amount), 0);
+                  const pending = instRepasses.filter((r) => r.status === "pending").reduce((s, r) => s + Number(r.amount), 0);
+                  return { inst, paid, pending, total: instRepasses.length };
+                })
+                .filter((row) => row.total > 0)
+                .sort((a, b) => b.paid - a.paid)
+                .map(({ inst, paid, pending }) => (
+                  <div key={inst.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+                        <Building2 className="h-3.5 w-3.5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{inst.name}</p>
+                        {pending > 0 && (
+                          <p className="text-xs text-muted-foreground">+ {fmt(pending)} pendente</p>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-sm font-bold text-primary">{fmt(paid)}</span>
+                  </div>
+                ))}
             </CardContent>
           </Card>
         )}
