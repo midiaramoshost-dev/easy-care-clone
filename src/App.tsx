@@ -13,6 +13,7 @@ import AdminSchedules from "./components/admin/AdminSchedules";
 import AdminReports from "./components/admin/AdminReports";
 import AdminSettings from "./components/admin/AdminSettings";
 import AdminDonations from "./components/admin/AdminDonations";
+import AdminRepasses from "./components/admin/AdminRepasses";
 import { AdminPlansTab } from "./components/admin/AdminPlansTab";
 import AdminCaregivers from "./components/admin/AdminCaregivers";
 import AdminClients from "./components/admin/AdminClients";
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="planos" element={<AdminPlansTab />} />
               <Route path="relatorios" element={<AdminReports />} />
               <Route path="doacoes" element={<AdminDonations />} />
+              <Route path="repasses" element={<AdminRepasses />} />
               <Route path="configuracoes" element={<AdminSettings />} />
             </Route>
             <Route path="/cuidador" element={<AreaCuidador />} />
