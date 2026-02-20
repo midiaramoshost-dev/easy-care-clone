@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Settings, Calendar, BarChart3, LogOut, HeartHandshake, UserCheck, Star, Heart, Send } from "lucide-react";
+import { LayoutDashboard, Users, Settings, Calendar, BarChart3, LogOut, HeartHandshake, UserCheck, Star, Heart, Send, Building2 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -26,6 +26,7 @@ const menuItems = [
   { title: "Planos", url: "/admin/planos", icon: Star },
   { title: "Doações", url: "/admin/doacoes", icon: Heart },
   { title: "Repasses", url: "/admin/repasses", icon: Send },
+  { title: "Instituições", url: "/admin/instituicoes", icon: Building2 },
   { title: "Relatórios", url: "/admin/relatorios", icon: BarChart3 },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings },
 ];

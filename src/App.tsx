@@ -14,6 +14,7 @@ import AdminReports from "./components/admin/AdminReports";
 import AdminSettings from "./components/admin/AdminSettings";
 import AdminDonations from "./components/admin/AdminDonations";
 import AdminRepasses from "./components/admin/AdminRepasses";
+import AdminInstitutions from "./components/admin/AdminInstitutions";
 import { AdminPlansTab } from "./components/admin/AdminPlansTab";
 import AdminCaregivers from "./components/admin/AdminCaregivers";
 import AdminClients from "./components/admin/AdminClients";
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="relatorios" element={<AdminReports />} />
               <Route path="doacoes" element={<AdminDonations />} />
               <Route path="repasses" element={<AdminRepasses />} />
+              <Route path="instituicoes" element={<AdminInstitutions />} />
               <Route path="configuracoes" element={<AdminSettings />} />
             </Route>
             <Route path="/cuidador" element={<AreaCuidador />} />
