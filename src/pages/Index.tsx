@@ -7,6 +7,7 @@ import TechnologySection from "@/components/TechnologySection";
 import NewTestimonialsSection from "@/components/NewTestimonialsSection";
 import PricingSection from "@/components/PricingSection";
 import NewCTASection from "@/components/NewCTASection";
+import DonationSection from "@/components/DonationSection";
 import Footer from "@/components/Footer";
 import FloatingCTA from "@/components/FloatingCTA";
 
@@ -22,6 +23,7 @@ const Index = () => {
         <TechnologySection />
         <NewTestimonialsSection />
         <PricingSection />
+        <DonationSection />
         <NewCTASection />
       </main>
       <Footer />

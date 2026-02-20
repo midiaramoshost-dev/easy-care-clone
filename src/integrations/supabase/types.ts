@@ -381,6 +381,36 @@ export type Database = {
           },
         ]
       }
+      donations: {
+        Row: {
+          amount: number
+          created_at: string
+          donor_email: string
+          donor_name: string
+          id: string
+          message: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          donor_email: string
+          donor_name: string
+          id?: string
+          message?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          donor_email?: string
+          donor_name?: string
+          id?: string
+          message?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       elderly: {
         Row: {
           birth_date: string | null
