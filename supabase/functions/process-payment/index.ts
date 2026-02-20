@@ -118,12 +118,26 @@ async function handleStripe(
     case "create_checkout_session": {
       const body = new URLSearchParams({
         mode: (params.mode as string) || "subscription",
-        "line_items[0][price]": params.price_id as string,
         "line_items[0][quantity]": "1",
         success_url: params.success_url as string,
         cancel_url: params.cancel_url as string,
         "metadata[user_id]": userId,
       });
+
+      // Support both pre-existing price_id and dynamic price_data
+      if (params.price_id) {
+        body.append("line_items[0][price]", params.price_id as string);
+      } else if (params.price_data) {
+        const pd = params.price_data as Record<string, unknown>;
+        body.append("line_items[0][price_data][currency]", (pd.currency as string) || "brl");
+        body.append("line_items[0][price_data][unit_amount]", String(pd.unit_amount));
+        const productData = pd.product_data as Record<string, unknown> | undefined;
+        if (productData?.name) {
+          body.append("line_items[0][price_data][product_data][name]", productData.name as string);
+        }
+      } else {
+        throw new Error("Stripe: forneça price_id ou price_data.");
+      }
 
       if (params.customer_email) {
         body.append("customer_email", params.customer_email as string);
