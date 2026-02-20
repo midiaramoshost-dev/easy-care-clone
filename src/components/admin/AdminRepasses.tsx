@@ -14,11 +14,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import {
-  Building2, Plus, Send, CheckCircle2, Clock, RefreshCw, Edit, DollarSign, TrendingUp, Calendar,
+  Building2, Plus, Send, CheckCircle2, Clock, RefreshCw, Edit, DollarSign, TrendingUp,
+  Download, Filter, X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 type Institution = {
   id: string;
@@ -67,6 +66,22 @@ export function AdminRepasses() {
   const [repasseForm, setRepasseForm] = useState(EMPTY_REPASSE);
   const [selectedRepasse, setSelectedRepasse] = useState<Repasse | null>(null);
 
+  // Filters
+  const [filterInst, setFilterInst] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
+
+  const hasActiveFilters = filterInst !== "all" || filterStatus !== "all" || !!filterDateFrom || !!filterDateTo;
+
+  const clearFilters = () => {
+    setFilterInst("all");
+    setFilterStatus("all");
+    setFilterDateFrom("");
+    setFilterDateTo("");
+  };
+
+
   // Queries
   const { data: institutions = [], isLoading: loadingInst, refetch: refetchInst } = useQuery({
     queryKey: ["institutions"],
@@ -98,11 +113,46 @@ export function AdminRepasses() {
     },
   });
 
-  // KPIs
+  // KPIs (always from full repasses list)
   const totalReceived = donations.reduce((s, d) => d.status === "paid" ? s + Number(d.amount) : s, 0);
   const totalRepassed = repasses.reduce((s, r) => r.status === "paid" ? s + Number(r.amount) : s, 0);
-  const pendingRepasses = repasses.filter((r) => r.status === "pending").reduce((s, r) => s + Number(r.amount), 0);
+  const pendingRepassesAmt = repasses.filter((r) => r.status === "pending").reduce((s, r) => s + Number(r.amount), 0);
   const balance = totalReceived - totalRepassed;
+
+  // Filtered list for table
+  const filteredRepasses = repasses.filter((r) => {
+    if (filterInst !== "all" && r.institution_id !== filterInst) return false;
+    if (filterStatus !== "all" && r.status !== filterStatus) return false;
+    if (filterDateFrom && r.created_at < filterDateFrom) return false;
+    if (filterDateTo && r.created_at > filterDateTo + "T23:59:59") return false;
+    return true;
+  });
+
+  // CSV export
+  const handleExportCSV = () => {
+    if (filteredRepasses.length === 0) return;
+    const headers = ["Instituição", "Valor (R$)", "Mês Referência", "Status", "Observações", "Criado em", "Pago em"];
+    const rows = filteredRepasses.map((r) => [
+      `"${(r.institutions?.name || "").replace(/"/g, '""')}"`,
+      Number(r.amount).toFixed(2),
+      `"${r.reference_month || ""}"`,
+      statusConfig[r.status]?.label || r.status,
+      `"${(r.notes || "").replace(/"/g, '""')}"`,
+      new Date(r.created_at).toLocaleString("pt-BR"),
+      r.paid_at ? new Date(r.paid_at).toLocaleString("pt-BR") : "",
+    ]);
+    const csv = [headers.join(";"), ...rows.map((row) => row.join(";"))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `repasses_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: `${filteredRepasses.length} repasse(s) exportados!` });
+  };
+
+
 
   // Mutations
   const saveInstitution = useMutation({
@@ -206,7 +256,7 @@ export function AdminRepasses() {
         {[
           { label: "Total Recebido", value: `R$ ${totalReceived.toFixed(2).replace(".", ",")}`, sub: "Doações confirmadas", icon: DollarSign, colored: true },
           { label: "Total Repassado", value: `R$ ${totalRepassed.toFixed(2).replace(".", ",")}`, sub: "Transferências pagas", icon: CheckCircle2 },
-          { label: "A Repassar", value: `R$ ${pendingRepasses.toFixed(2).replace(".", ",")}`, sub: "Repasses pendentes", icon: Clock },
+          { label: "A Repassar", value: `R$ ${pendingRepassesAmt.toFixed(2).replace(".", ",")}`, sub: "Repasses pendentes", icon: Clock },
           { label: "Saldo Disponível", value: `R$ ${balance.toFixed(2).replace(".", ",")}`, sub: "Para novos repasses", icon: TrendingUp, colored: balance > 0 },
         ].map(({ label, value, sub, icon: Icon, colored }) => (
           <Card key={label}>
@@ -229,16 +279,86 @@ export function AdminRepasses() {
         </TabsList>
 
         {/* Repasses Tab */}
-        <TabsContent value="repasses" className="mt-4">
+        <TabsContent value="repasses" className="mt-4 space-y-3">
+          {/* Filters bar */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+
+            <Select value={filterInst} onValueChange={setFilterInst}>
+              <SelectTrigger className="w-[200px] bg-background">
+                <SelectValue placeholder="Instituição" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="all">Todas as instituições</SelectItem>
+                {institutions.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[150px] bg-background">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="paid">Pago</SelectItem>
+                <SelectItem value="cancelled">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center gap-1">
+              <Label className="text-xs text-muted-foreground whitespace-nowrap">De:</Label>
+              <Input
+                type="date"
+                className="w-[140px] h-9 text-sm bg-background"
+                value={filterDateFrom}
+                onChange={(e) => setFilterDateFrom(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <Label className="text-xs text-muted-foreground whitespace-nowrap">Até:</Label>
+              <Input
+                type="date"
+                className="w-[140px] h-9 text-sm bg-background"
+                value={filterDateTo}
+                onChange={(e) => setFilterDateTo(e.target.value)}
+              />
+            </div>
+
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" className="h-9 px-2 text-muted-foreground" onClick={clearFilters}>
+                <X className="h-3.5 w-3.5 mr-1" />Limpar
+              </Button>
+            )}
+
+            <div className="ml-auto flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {filteredRepasses.length} resultado(s)
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCSV}
+                disabled={filteredRepasses.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />Exportar CSV
+              </Button>
+            </div>
+          </div>
+
           <Card>
             <CardContent className="p-0">
               {loadingRepasses ? (
                 <div className="flex items-center justify-center py-16 text-muted-foreground">Carregando...</div>
-              ) : repasses.length === 0 ? (
+              ) : filteredRepasses.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
                   <Send className="h-8 w-8 opacity-30" />
-                  <p>Nenhum repasse registrado.</p>
-                  <Button size="sm" onClick={() => setAddRepasseOpen(true)}><Plus className="h-4 w-4 mr-2" />Criar primeiro repasse</Button>
+                  <p>{hasActiveFilters ? "Nenhum repasse para os filtros selecionados." : "Nenhum repasse registrado."}</p>
+                  {!hasActiveFilters && (
+                    <Button size="sm" onClick={() => setAddRepasseOpen(true)}><Plus className="h-4 w-4 mr-2" />Criar primeiro repasse</Button>
+                  )}
                 </div>
               ) : (
                 <Table>
@@ -253,7 +373,7 @@ export function AdminRepasses() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {repasses.map((r) => {
+                    {filteredRepasses.map((r) => {
                       const st = statusConfig[r.status] || { label: r.status, variant: "outline" as const, icon: Clock };
                       const Icon = st.icon;
                       return (
