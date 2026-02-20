@@ -1,7 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Calendar, BarChart3, TrendingUp, Activity } from "lucide-react";
+import { Users, Calendar, BarChart3, TrendingUp, Activity, Heart, Send, Clock, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { Progress } from "@/components/ui/progress";
 
 export function AdminDashboard() {
   const { data: profilesCount = 0 } = useQuery({
@@ -43,6 +44,29 @@ export function AdminDashboard() {
     },
   });
 
+  const { data: donationStats = { totalDonated: 0, totalRepassed: 0, pendingRepasses: 0, balance: 0 } } = useQuery({
+    queryKey: ["admin-donation-stats"],
+    queryFn: async () => {
+      const [donationsRes, repassesRes] = await Promise.all([
+        supabase.from("donations").select("amount, status"),
+        supabase.from("repasses").select("amount, status"),
+      ]);
+      if (donationsRes.error) throw donationsRes.error;
+      if (repassesRes.error) throw repassesRes.error;
+
+      const totalDonated = (donationsRes.data || []).reduce(
+        (s, d) => d.status === "paid" ? s + Number(d.amount) : s, 0
+      );
+      const totalRepassed = (repassesRes.data || []).reduce(
+        (s, r) => r.status === "paid" ? s + Number(r.amount) : s, 0
+      );
+      const pendingRepasses = (repassesRes.data || []).reduce(
+        (s, r) => r.status === "pending" ? s + Number(r.amount) : s, 0
+      );
+      return { totalDonated, totalRepassed, pendingRepasses, balance: totalDonated - totalRepassed };
+    },
+  });
+
   const { data: recentActivities = [] } = useQuery({
     queryKey: ["admin-recent-activities"],
     queryFn: async () => {
@@ -55,6 +79,11 @@ export function AdminDashboard() {
       return data;
     },
   });
+
+  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
+  const repassedPct = donationStats.totalDonated > 0
+    ? Math.min(100, (donationStats.totalRepassed / donationStats.totalDonated) * 100)
+    : 0;
 
   const stats = [
     { title: "Total de Usuários", value: String(profilesCount), change: "cadastrados", icon: Users },
@@ -70,6 +99,7 @@ export function AdminDashboard() {
         <p className="text-muted-foreground">Visão geral do sistema CuidadoFácil</p>
       </div>
 
+      {/* General KPIs */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.title}>
@@ -83,6 +113,78 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Donations & Repasses KPIs */}
+      <div>
+        <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
+          <Heart className="h-4 w-4 text-primary" />
+          Doações e Repasses
+        </h3>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Arrecadado</CardTitle>
+              <Heart className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">{fmt(donationStats.totalDonated)}</div>
+              <p className="text-xs text-muted-foreground">Doações confirmadas</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Repassado</CardTitle>
+              <Send className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{fmt(donationStats.totalRepassed)}</div>
+              <p className="text-xs text-muted-foreground">Transferências pagas</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Repasses Pendentes</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{fmt(donationStats.pendingRepasses)}</div>
+              <p className="text-xs text-muted-foreground">Aguardando confirmação</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Saldo Disponível</CardTitle>
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${donationStats.balance > 0 ? "text-primary" : ""}`}>
+                {fmt(donationStats.balance)}
+              </div>
+              <p className="text-xs text-muted-foreground">Para novos repasses</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Progress bar */}
+        {donationStats.totalDonated > 0 && (
+          <Card className="mt-4">
+            <CardContent className="pt-5 pb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Progresso de repasse às instituições</span>
+                <span className="text-sm font-semibold text-primary">{repassedPct.toFixed(1)}%</span>
+              </div>
+              <Progress value={repassedPct} className="h-2" />
+              <div className="flex justify-between mt-2">
+                <span className="text-xs text-muted-foreground">Repassado: {fmt(donationStats.totalRepassed)}</span>
+                <span className="text-xs text-muted-foreground">Arrecadado: {fmt(donationStats.totalDonated)}</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
