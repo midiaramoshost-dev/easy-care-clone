@@ -521,6 +521,51 @@ export type Database = {
           },
         ]
       }
+      institutions: {
+        Row: {
+          active: boolean
+          address: string | null
+          bank_info: string | null
+          cnpj: string | null
+          contact_person: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          pix_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          bank_info?: string | null
+          cnpj?: string | null
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          pix_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          bank_info?: string | null
+          cnpj?: string | null
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          pix_key?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
@@ -862,6 +907,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      repasses: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          institution_id: string
+          notes: string | null
+          paid_at: string | null
+          reference_month: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institution_id: string
+          notes?: string | null
+          paid_at?: string | null
+          reference_month?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institution_id?: string
+          notes?: string | null
+          paid_at?: string | null
+          reference_month?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repasses_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {
