@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, CheckCircle, Loader2 } from "lucide-react";
+import { Heart, CheckCircle, Loader2, CreditCard, QrCode, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,12 @@ import { useToast } from "@/hooks/use-toast";
 
 const presetAmounts = [5, 10, 20, 50, 100];
 
+const paymentMethods = [
+  { id: "stripe", label: "Cartão", icon: CreditCard, description: "Débito ou crédito" },
+  { id: "mercado_pago", label: "PIX / Boleto", icon: QrCode, description: "Via Mercado Pago" },
+  { id: "manual", label: "PIX Manual", icon: Banknote, description: "Transferência direta" },
+];
+
 const DonationSection = () => {
   const { toast } = useToast();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(10);
@@ -16,8 +22,10 @@ const DonationSection = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("stripe");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [manualPix, setManualPix] = useState(false);
 
   const finalAmount = customAmount
     ? parseFloat(customAmount.replace(",", "."))
@@ -46,24 +54,78 @@ const DonationSection = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.from("donations").insert({
-        donor_name: name.trim(),
-        donor_email: email.trim().toLowerCase(),
-        amount: finalAmount!,
-        message: message.trim() || null,
+      // First, register the donation intent
+      const { data: donation, error: dbError } = await supabase
+        .from("donations")
+        .insert({
+          donor_name: name.trim(),
+          donor_email: email.trim().toLowerCase(),
+          amount: finalAmount!,
+          message: message.trim() || null,
+          status: "pending",
+        })
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+
+      if (paymentMethod === "manual") {
+        // Manual PIX - just show success with instructions
+        setManualPix(true);
+        setSuccess(true);
+        return;
+      }
+
+      // Process via payment gateway
+      const origin = window.location.origin;
+      const { data: paymentData, error: paymentError } = await supabase.functions.invoke("process-payment", {
+        body: {
+          gateway: paymentMethod,
+          action: paymentMethod === "stripe" ? "create_checkout_session" : "create_preference",
+          ...(paymentMethod === "stripe"
+            ? {
+                mode: "payment",
+                price_data: {
+                  currency: "brl",
+                  unit_amount: Math.round(finalAmount! * 100),
+                  product_data: { name: `Doação para Asilos de Sorocaba - ${name.trim()}` },
+                },
+                success_url: `${origin}/?doacao=sucesso`,
+                cancel_url: `${origin}/?doacao=cancelado`,
+                customer_email: email.trim(),
+              }
+            : {
+                items: [
+                  {
+                    title: "Doação para Asilos de Sorocaba",
+                    quantity: 1,
+                    unit_price: finalAmount!,
+                    currency_id: "BRL",
+                  },
+                ],
+                payer: { name: name.trim(), email: email.trim() },
+                back_urls: {
+                  success: `${origin}/?doacao=sucesso`,
+                  failure: `${origin}/?doacao=cancelado`,
+                  pending: `${origin}/?doacao=pendente`,
+                },
+              }),
+        },
       });
 
-      if (error) throw error;
+      if (paymentError) throw new Error(paymentError.message);
 
-      setSuccess(true);
+      const redirectUrl = paymentData?.url || paymentData?.init_point;
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+      } else {
+        throw new Error("URL de pagamento não retornada.");
+      }
+    } catch (err: any) {
+      console.error("Donation error:", err);
       toast({
-        title: "Doação registrada! 💚",
-        description: `Obrigado, ${name.trim()}! Sua doação de R$ ${finalAmount!.toFixed(2)} vai ajudar os asilos de Sorocaba.`,
-      });
-    } catch (err) {
-      toast({
-        title: "Erro ao registrar doação",
-        description: "Tente novamente em instantes.",
+        title: "Erro ao processar doação",
+        description: err.message || "Tente novamente em instantes.",
         variant: "destructive",
       });
     } finally {
@@ -73,7 +135,6 @@ const DonationSection = () => {
 
   return (
     <section className="section-padding bg-card relative overflow-hidden">
-      {/* Soft background decoration */}
       <div className="absolute top-0 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" />
 
@@ -111,13 +172,34 @@ const DonationSection = () => {
                 <CheckCircle className="w-10 h-10 text-primary" />
               </div>
               <h3 className="text-2xl font-bold text-foreground mb-3">Muito obrigado!</h3>
-              <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                Sua doação foi registrada com sucesso. Você receberá uma confirmação no seu e-mail.
-              </p>
+              {manualPix ? (
+                <div className="max-w-md mx-auto">
+                  <p className="text-muted-foreground mb-4">
+                    Sua doação foi registrada! Realize o pagamento via PIX para a chave abaixo:
+                  </p>
+                  <div className="p-4 bg-muted rounded-xl text-left mb-6">
+                    <p className="text-xs text-muted-foreground mb-1">Chave PIX (CNPJ)</p>
+                    <p className="font-mono font-semibold text-foreground text-sm">00.000.000/0001-00</p>
+                    <p className="text-xs text-muted-foreground mt-2 mb-1">Favorecido</p>
+                    <p className="font-semibold text-sm text-foreground">CuidadoFácil — Asilos de Sorocaba</p>
+                    <p className="text-xs text-muted-foreground mt-2 mb-1">Valor</p>
+                    <p className="font-bold text-primary">R$ {finalAmount?.toFixed(2)}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Após o pagamento, envie o comprovante para <strong>doacoes@cuidadofacil.com.br</strong>
+                  </p>
+                </div>
+              ) : (
+                <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                  Sua doação foi registrada com sucesso. Você receberá uma confirmação no seu e-mail em breve.
+                </p>
+              )}
               <Button
                 variant="outline"
+                className="mt-6"
                 onClick={() => {
                   setSuccess(false);
+                  setManualPix(false);
                   setName("");
                   setEmail("");
                   setMessage("");
@@ -143,8 +225,8 @@ const DonationSection = () => {
                   <ul className="space-y-3">
                     {[
                       "Escolha o valor que deseja doar (mínimo R$ 2,00)",
-                      "Preencha seus dados para confirmação",
-                      "Nossa equipe entra em contato com instruções de pagamento",
+                      "Preencha seus dados e escolha a forma de pagamento",
+                      "Você é redirecionado para o ambiente seguro de pagamento",
                       "Sua doação é repassada integralmente aos asilos parceiros",
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
@@ -252,21 +334,50 @@ const DonationSection = () => {
                   />
                 </div>
 
+                {/* Payment method */}
+                <div>
+                  <Label className="text-sm font-medium text-foreground mb-3 block">
+                    Forma de pagamento
+                  </Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {paymentMethods.map((method) => (
+                      <button
+                        key={method.id}
+                        type="button"
+                        onClick={() => setPaymentMethod(method.id)}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          paymentMethod === method.id
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-border text-muted-foreground hover:border-primary/50 hover:bg-muted"
+                        }`}
+                      >
+                        <method.icon className="w-4 h-4 mb-1" />
+                        <p className="text-xs font-semibold">{method.label}</p>
+                        <p className="text-xs opacity-70">{method.description}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <Button
                   type="submit"
                   disabled={!isValid || loading}
-                  className="w-full h-12 rounded-xl font-semibold text-base gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+                  className="w-full h-12 rounded-xl font-semibold text-base gap-2"
                 >
                   {loading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     <Heart className="w-5 h-5" />
                   )}
-                  {loading ? "Registrando..." : `Doe R$ ${finalAmount?.toFixed(2) ?? "–"}`}
+                  {loading
+                    ? "Processando..."
+                    : paymentMethod === "manual"
+                    ? `Registrar doação de R$ ${finalAmount?.toFixed(2) ?? "–"}`
+                    : `Pagar R$ ${finalAmount?.toFixed(2) ?? "–"}`}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
-                  Após o registro, nossa equipe entrará em contato com as formas de pagamento disponíveis.
+                  🔒 Pagamento seguro. Seus dados são protegidos.
                 </p>
               </form>
             </motion.div>
