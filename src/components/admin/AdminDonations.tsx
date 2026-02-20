@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Heart, TrendingUp, DollarSign, Users, Search, RefreshCw, ChevronRight } from "lucide-react";
+import { Heart, TrendingUp, DollarSign, Users, Search, RefreshCw, ChevronRight, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -127,6 +127,26 @@ export function AdminDonations() {
     setSelectedDonor(donorMap[email] || null);
   };
 
+  const handleExportCSV = () => {
+    const headers = ["Nome", "E-mail", "Valor (R$)", "Status", "Mensagem", "Data"];
+    const rows = filtered.map((d) => [
+      `"${d.donor_name.replace(/"/g, '""')}"`,
+      `"${d.donor_email}"`,
+      Number(d.amount).toFixed(2),
+      statusLabels[d.status]?.label || d.status,
+      `"${(d.message || "").replace(/"/g, '""')}"`,
+      new Date(d.created_at).toLocaleString("pt-BR"),
+    ]);
+    const csv = [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `doacoes_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -135,9 +155,14 @@ export function AdminDonations() {
           <h2 className="text-2xl font-bold tracking-tight">Doações</h2>
           <p className="text-muted-foreground">Gestão das doações para asilos de Sorocaba</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
-          <RefreshCw className="h-4 w-4 mr-2" />Atualizar
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={filtered.length === 0}>
+            <Download className="h-4 w-4 mr-2" />Exportar CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="h-4 w-4 mr-2" />Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* KPIs */}
