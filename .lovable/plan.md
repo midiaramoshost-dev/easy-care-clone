@@ -1,89 +1,51 @@
 
+## Tornar a Home Mais Suave e Acolhedora
 
-# Plano Completo: Migrar Estrutura do Backup para o Projeto Atual
+O objetivo é suavizar o visual da página inicial, reduzindo o contraste agressivo, os gradientes intensos e os elementos muito saturados, criando uma experiência mais acolhedora e profissional — ideal para o público-alvo (famílias que cuidam de idosos).
 
-## Resumo
+### O que será ajustado
 
-Adicionar as tabelas do backup original (caregivers, elderly, medications, medication_reminders, health_records, diary_entries, user_activities), criar paginas e componentes para gerencia-las, e atualizar o trigger `handle_new_user()` para auto-atribuir admin.
+**1. Paleta de cores — `src/index.css`**
+- Suavizar a cor primária de um azul elétrico intenso (`199 89% 48%`) para um azul mais sereno (`199 70% 52%`)
+- Suavizar o accent de um roxo vibrante (`262 83% 58%`) para um tom mais suave (`248 60% 62%`)
+- Ajustar o fundo (`--background`) para um branco levemente quente (`30 20% 98%`) em vez de frio/acinzentado
+- Reduzir a intensidade de `--primary-light` para tons mais pastel
 
----
+**2. Hero Slideshow — `src/components/HeroSlideshow.tsx`**
+- Reduzir o overlay escuro nas imagens de `from-foreground/85` para `from-foreground/70 via-foreground/55` — deixando as fotos respirarem mais
+- Suavizar as sombras dos botões (remover `shadow-primary/25` intenso)
+- Tornar o badge mais translúcido e delicado
 
-## Fase 1: Banco de Dados (Migracao SQL)
+**3. Stats Section — `src/components/NewStatsSection.tsx`**
+- Trocar os ícones com gradiente total por ícones com fundo pastel suave (`bg-primary/10`) e ícone colorido
+- Remover `group-hover:scale-110` (animação muito brusca) por transição mais sutil
 
-### 1.1 Novas Tabelas
+**4. Features Section — `src/components/NewFeaturesSection.tsx`**
+- Suavizar os ícones dos cards de gradiente cheio para fundo pastel com ícone colorido
+- Reduzir `hover:shadow-xl` para `hover:shadow-md` com sombra mais suave
+- Aumentar o espaçamento interno dos cards para dar mais "respiro"
 
-- **caregivers** - Dados profissionais do cuidador (especialidade, experiencia, disponibilidade, certificacoes, bio, foto). Referencia `profiles.id`.
-- **elderly** - Cadastro de idosos vinculados a um cliente (nome, data_nascimento, condicoes_medicas, necessidades_especiais, contato_emergencia). Referencia `profiles.id` como responsavel.
-- **medications** - Medicamentos vinculados a um idoso (nome, dosagem, frequencia, horarios, observacoes).
-- **medication_reminders** - Lembretes de medicamento (horario, status: pendente/administrado/ignorado).
-- **health_records** - Registros de saude do idoso (pressao, temperatura, glicemia, peso, observacoes, data).
-- **diary_entries** - Diario de cuidados (entrada de texto do cuidador sobre o dia do idoso, humor, alimentacao, atividades).
-- **user_activities** - Log de atividades do sistema (user_id, acao, detalhes, timestamp).
+**5. Technology Section — `src/components/TechnologySection.tsx`**
+- Trocar os checkmarks de gradiente cheio por círculos pastel com check colorido
+- Suavizar a sombra da imagem (`shadow-2xl` → `shadow-lg`)
 
-### 1.2 Politicas RLS
+**6. Testimonials Section — `src/components/NewTestimonialsSection.tsx`**
+- Trocar os avatares de gradiente cheio por fundo pastel suave
+- Suavizar `hover:shadow-xl` para `hover:shadow-md`
 
-Cada tabela tera politicas para:
-- Admin: acesso total (leitura, escrita, exclusao)
-- Cuidador: leitura/escrita nos idosos que atende (via appointments)
-- Cliente: leitura/escrita nos seus proprios idosos e dados vinculados
+**7. CTA Section — `src/components/NewCTASection.tsx`**
+- Trocar o gradiente de fundo sólido e saturado (`from-primary via-primary to-accent`) por uma versão mais suave com opacidade reduzida sobre fundo claro, ou um fundo escuro mais neutro e elegante (`from-slate-800 to-slate-900`) com detalhes em cor primária suave
 
-### 1.3 Atualizar `handle_new_user()`
+**8. Header — `src/components/Header.tsx`**
+- Adicionar leve blur e fundo branco com mais opacidade (já tem glass-effect, apenas reforçar)
 
-Alterar a funcao para atribuir automaticamente a role `admin` para os emails `admin@cuidadofacil.com` e `ramos660@hotmail.com`.
+**9. Footer — `src/components/Footer.tsx`**
+- Suavizar de fundo completamente escuro para um tom mais neutro/azul-escuro (`from-slate-900 to-slate-800`) para não ser tão pesado visualmente
 
----
+### Resultado esperado
 
-## Fase 2: Paginas e Componentes
-
-### 2.1 Area do Cliente - Novas abas
-
-- **Meus Idosos**: Listar, cadastrar e editar idosos vinculados ao cliente
-- **Medicamentos**: Gerenciar medicamentos de cada idoso
-- **Saude**: Visualizar registros de saude (preenchidos pelo cuidador)
-- **Diario**: Ler entradas do diario de cuidados
-
-### 2.2 Area do Cuidador - Novas abas
-
-- **Meu Perfil Profissional**: Editar dados de cuidador (especialidade, certificacoes, bio)
-- **Idosos Atendidos**: Lista dos idosos dos agendamentos ativos
-- **Registros de Saude**: Criar/editar registros de saude dos idosos atendidos
-- **Diario**: Escrever entradas de diario sobre os idosos atendidos
-- **Lembretes de Medicamento**: Visualizar e marcar medicamentos como administrados
-
-### 2.3 Admin - Melhorias
-
-- **Dashboard**: Substituir dados estaticos por consultas reais ao banco (contagem de usuarios, agendamentos, etc.)
-- **Atividades Recentes**: Usar tabela `user_activities` para mostrar log real
-
----
-
-## Fase 3: Detalhes Tecnicos
-
-### Migracao SQL (executada via ferramenta de migracao)
-
-```text
-Tabelas criadas:
-  caregivers        -> id (uuid, PK, FK profiles.id), specialty, experience_years, availability, certifications, bio, avatar_url, hourly_rate, active, created_at, updated_at
-  elderly           -> id (uuid, PK), responsible_id (FK profiles.id), name, birth_date, medical_conditions, special_needs, emergency_contact, emergency_phone, photo_url, notes, created_at, updated_at
-  medications       -> id (uuid, PK), elderly_id (FK elderly.id), name, dosage, frequency, schedule_times (jsonb), start_date, end_date, notes, active, created_at
-  medication_reminders -> id (uuid, PK), medication_id (FK medications.id), scheduled_time (timestamptz), status (enum: pending/administered/skipped), administered_by (FK profiles.id nullable), notes, created_at
-  health_records    -> id (uuid, PK), elderly_id (FK elderly.id), recorded_by (FK profiles.id), blood_pressure, temperature, blood_sugar, weight, heart_rate, notes, recorded_at, created_at
-  diary_entries     -> id (uuid, PK), elderly_id (FK elderly.id), author_id (FK profiles.id), content, mood, meals, activities, created_at
-  user_activities   -> id (uuid, PK), user_id (FK profiles.id nullable), action, details, created_at
-```
-
-### Arquivos a criar/modificar
-
-- `src/pages/AreaCliente.tsx` - Adicionar abas: Idosos, Medicamentos, Saude, Diario
-- `src/pages/AreaCuidador.tsx` - Adicionar abas: Perfil Profissional, Idosos, Saude, Diario, Lembretes
-- `src/components/admin/AdminDashboard.tsx` - Consultas reais ao banco
-- Novos componentes auxiliares conforme necessario (formularios de idoso, registros de saude, etc.)
-
-### Ordem de implementacao
-
-1. Migracao SQL (todas as tabelas + RLS + trigger update)
-2. Tipos serao atualizados automaticamente
-3. Componentes da Area do Cliente (idosos e medicamentos primeiro)
-4. Componentes da Area do Cuidador (registros de saude e diario)
-5. Dashboard admin com dados reais
-
+A home ficará com visual mais:
+- **Acolhedor**: tons mais suaves remetem à tranquilidade e cuidado
+- **Profissional**: sem excessos de gradientes saturados
+- **Acessível**: melhor contraste confortável para o público sênior/familiar
+- **Coerente**: identidade visual consistente com o propósito emocional da marca
