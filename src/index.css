@@ -6,25 +6,25 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 224 71% 4%;
+    --background: 30 20% 98%;
+    --foreground: 224 50% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
+    --card-foreground: 224 50% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
+    --popover-foreground: 224 50% 10%;
 
-    --primary: 199 89% 48%;
+    --primary: 199 65% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 96%;
-    --secondary-foreground: 224 71% 4%;
+    --secondary-foreground: 224 50% 10%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 220 14% 95%;
+    --muted-foreground: 220 9% 52%;
 
-    --accent: 262 83% 58%;
+    --accent: 248 55% 62%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -37,10 +37,10 @@
     --radius: 1rem;
 
     /* Custom semantic colors */
-    --primary-light: 199 89% 95%;
-    --primary-dark: 199 89% 38%;
-    --gradient-start: 199 89% 48%;
-    --gradient-end: 262 83% 58%;
+    --primary-light: 199 65% 94%;
+    --primary-dark: 199 65% 40%;
+    --gradient-start: 199 65% 50%;
+    --gradient-end: 248 55% 62%;
     
     /* Trust badge colors */
     --trust-bg: 199 89% 97%;

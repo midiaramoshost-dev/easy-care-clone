@@ -42,8 +42,8 @@ const TechnologySection = () => {
                   transition={{ delay: index * 0.1 }}
                   className="flex items-center gap-4"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0">
-                    <Check className="w-5 h-5 text-primary-foreground" />
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-5 h-5 text-primary" />
                   </div>
                   <span className="text-foreground font-medium text-lg">{feature}</span>
                 </motion.li>
@@ -57,7 +57,7 @@ const TechnologySection = () => {
             viewport={{ once: true }}
             className="relative"
           >
-            <div className="rounded-3xl overflow-hidden shadow-2xl">
+            <div className="rounded-3xl overflow-hidden shadow-lg">
               <img
                 src={technologyCare}
                 alt="Dashboard do aplicativo CuidadoFácil"
