@@ -15,8 +15,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import {
   Building2, Plus, Send, CheckCircle2, Clock, RefreshCw, Edit, DollarSign, TrendingUp,
-  Download, Filter, X,
+  Download, Filter, X, BarChart3,
 } from "lucide-react";
+import { DebtAgingTab } from "./DebtAgingTab";
 import { useToast } from "@/hooks/use-toast";
 
 type Institution = {
@@ -276,6 +277,9 @@ export function AdminRepasses() {
         <TabsList>
           <TabsTrigger value="repasses">Repasses</TabsTrigger>
           <TabsTrigger value="instituicoes">Instituições</TabsTrigger>
+          <TabsTrigger value="aging" className="flex items-center gap-1.5">
+            <BarChart3 className="h-3.5 w-3.5" />Aging de Dívidas
+          </TabsTrigger>
         </TabsList>
 
         {/* Repasses Tab */}
@@ -420,6 +424,15 @@ export function AdminRepasses() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Aging Tab */}
+        <TabsContent value="aging" className="mt-4">
+          <DebtAgingTab
+            repasses={repasses}
+            institutions={institutions}
+            loading={loadingRepasses || loadingInst}
+          />
         </TabsContent>
 
         {/* Institutions Tab */}
