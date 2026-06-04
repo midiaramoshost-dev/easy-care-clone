@@ -12,7 +12,9 @@ import { toast } from "sonner";
 const ComecarAgora = () => {
   const [tipoSelecionado, setTipoSelecionado] = useState<"cliente" | "cuidador" | null>(null);
   const [loading, setLoading] = useState(false);
+  const [cameras, setCameras] = useState<number>(0);
   const navigate = useNavigate();
+
 
   const beneficios = [
     "Cuidadores verificados e treinados",
