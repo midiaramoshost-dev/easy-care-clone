@@ -489,6 +489,19 @@ export function AdminClients() {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label>Quantidade de câmeras</Label>
+              <Input
+                type="number"
+                min={0}
+                max={50}
+                value={form.cameras_quantity}
+                onChange={(e) => setForm({ ...form, cameras_quantity: Math.max(0, parseInt(e.target.value || "0", 10)) })}
+              />
+              <p className="text-xs text-muted-foreground">Número de câmeras de monitoramento contratadas pelo cliente.</p>
+            </div>
+
+
             {/* Subscription */}
             <div className="space-y-2 p-4 rounded-lg border border-border bg-muted/30">
               <Label className="font-semibold">Plano de Assinatura</Label>
