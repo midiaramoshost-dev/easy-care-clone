@@ -18,7 +18,7 @@ interface AuthContextType {
   roles: AppRole[];
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, role: AppRole, fullName?: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, role: AppRole, fullName?: string, camerasQuantity?: number) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
 }
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, role: AppRole, fullName?: string) => {
+  const signUp = async (email: string, password: string, role: AppRole, fullName?: string, camerasQuantity?: number) => {
     const redirectUrl = `${window.location.origin}/`;
 
     const { data, error } = await supabase.auth.signUp({
@@ -115,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: {
           full_name: fullName,
           requested_role: role,
+          cameras_quantity: camerasQuantity ?? 0,
         },
       },
     });
@@ -123,9 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     }
 
-    // If user was created and we have a user id, assign the role
     if (data.user) {
-      // Use RPC to assign role (security definer function)
       const { error: roleError } = await supabase.rpc('assign_role_to_user', {
         _user_id: data.user.id,
         _role: role,
@@ -135,12 +134,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('Error assigning role:', roleError);
       }
 
-      // Update profile with full name if provided
-      if (fullName) {
-        await supabase
-          .from('profiles')
-          .update({ full_name: fullName })
-          .eq('id', data.user.id);
+      const profileUpdate: { full_name?: string; cameras_quantity?: number } = {};
+      if (fullName) profileUpdate.full_name = fullName;
+      if (typeof camerasQuantity === 'number') profileUpdate.cameras_quantity = camerasQuantity;
+      if (Object.keys(profileUpdate).length > 0) {
+        await supabase.from('profiles').update(profileUpdate).eq('id', data.user.id);
       }
     }
 
