@@ -313,6 +313,32 @@ const Auth = () => {
                     </RadioGroup>
                     {errors.role && <p className="text-xs text-destructive">{errors.role}</p>}
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-cameras" className="text-sm font-medium">
+                      Quantidade de câmeras desejadas
+                    </Label>
+                    <Input
+                      id="signup-cameras"
+                      type="number"
+                      min={0}
+                      max={50}
+                      placeholder="0"
+                      className="h-11"
+                      value={signupForm.camerasQuantity}
+                      onChange={(e) =>
+                        setSignupForm({
+                          ...signupForm,
+                          camerasQuantity: Math.max(0, parseInt(e.target.value || '0', 10)),
+                        })
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Informe quantas câmeras de monitoramento você pretende utilizar (0 se nenhuma).
+                    </p>
+                    {errors.camerasQuantity && (
+                      <p className="text-xs text-destructive">{errors.camerasQuantity}</p>
+                    )}
+                  </div>
                   <Button type="submit" className="w-full h-11 font-semibold" disabled={isSubmitting}>
                     {isSubmitting ? (
                       <>
