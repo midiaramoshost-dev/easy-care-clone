@@ -22,10 +22,12 @@ interface ClientRow {
   phone: string | null;
   address: string | null;
   avatar_url: string | null;
+  cameras_quantity: number | null;
   created_at: string;
   is_banned?: boolean;
   subscription?: { plan_id: string | null; status: string; billing_period: string } | null;
 }
+
 
 export function AdminClients() {
   const [clients, setClients] = useState<ClientRow[]>([]);
