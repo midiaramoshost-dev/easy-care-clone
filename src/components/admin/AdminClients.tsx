@@ -22,10 +22,12 @@ interface ClientRow {
   phone: string | null;
   address: string | null;
   avatar_url: string | null;
+  cameras_quantity: number | null;
   created_at: string;
   is_banned?: boolean;
   subscription?: { plan_id: string | null; status: string; billing_period: string } | null;
 }
+
 
 export function AdminClients() {
   const [clients, setClients] = useState<ClientRow[]>([]);
@@ -50,7 +52,9 @@ export function AdminClients() {
     password: "",
     plan_id: "",
     billing_period: "monthly",
+    cameras_quantity: 0,
   });
+
 
   const fetchClients = async () => {
     setLoading(true);
@@ -87,9 +91,11 @@ export function AdminClients() {
         phone: p.phone,
         address: p.address,
         avatar_url: (p as any).avatar_url || null,
+        cameras_quantity: (p as any).cameras_quantity ?? 0,
         created_at: p.created_at,
         subscription: subs?.find((s) => s.user_id === p.id) || null,
       }));
+
       setClients(mapped);
     } catch (error) {
       console.error("Error fetching clients:", error);
@@ -221,8 +227,10 @@ export function AdminClients() {
         phone: form.phone,
         address: form.address,
         avatar_url: avatarUrl,
+        cameras_quantity: form.cameras_quantity,
       }).eq("id", userId);
       if (profileErr) throw profileErr;
+
 
       if (form.plan_id) {
         const existing = selectedClient.subscription;
@@ -265,7 +273,9 @@ export function AdminClients() {
       password: "",
       plan_id: "",
       billing_period: "monthly",
+      cameras_quantity: 0,
     });
+
     setPhotoFile(null);
     setDialogOpen(true);
   };
@@ -282,7 +292,9 @@ export function AdminClients() {
       password: "",
       plan_id: client.subscription?.plan_id || "",
       billing_period: client.subscription?.billing_period || "monthly",
+      cameras_quantity: client.cameras_quantity ?? 0,
     });
+
     setPhotoFile(null);
     setDialogOpen(true);
 
@@ -476,6 +488,19 @@ export function AdminClients() {
                 <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label>Quantidade de câmeras</Label>
+              <Input
+                type="number"
+                min={0}
+                max={50}
+                value={form.cameras_quantity}
+                onChange={(e) => setForm({ ...form, cameras_quantity: Math.max(0, parseInt(e.target.value || "0", 10)) })}
+              />
+              <p className="text-xs text-muted-foreground">Número de câmeras de monitoramento contratadas pelo cliente.</p>
+            </div>
+
 
             {/* Subscription */}
             <div className="space-y-2 p-4 rounded-lg border border-border bg-muted/30">
