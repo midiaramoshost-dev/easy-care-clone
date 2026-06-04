@@ -21,6 +21,7 @@ const signupSchema = z.object({
   email: z.string().trim().email({ message: 'Email inválido' }),
   password: z.string().min(6, { message: 'Senha deve ter pelo menos 6 caracteres' }),
   role: z.enum(['cliente', 'cuidador'], { required_error: 'Selecione um tipo de conta' }),
+  camerasQuantity: z.number().int().min(0, { message: 'Quantidade inválida' }).max(50, { message: 'Máximo de 50 câmeras' }),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -39,6 +40,7 @@ const Auth = () => {
     email: '',
     password: '',
     role: 'cliente',
+    camerasQuantity: 0,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -88,7 +90,7 @@ const Auth = () => {
       return;
     }
     setIsSubmitting(true);
-    const { error } = await signUp(signupForm.email, signupForm.password, signupForm.role, signupForm.fullName);
+    const { error } = await signUp(signupForm.email, signupForm.password, signupForm.role, signupForm.fullName, signupForm.camerasQuantity);
     setIsSubmitting(false);
     if (error) {
       let errorMessage = 'Erro ao criar conta. Tente novamente.';
