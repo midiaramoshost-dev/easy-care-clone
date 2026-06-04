@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Users, Plus, Edit, Trash2, User, Calendar, Heart, Phone, AlertTriangle, FileText, ChevronDown, ChevronUp, MapPin } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Users, Plus, Edit, Trash2, User, Calendar, Heart, Phone, AlertTriangle, FileText, ChevronDown, ChevronUp, MapPin, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,6 +32,7 @@ export function ElderlyTab() {
   const [form, setForm] = useState({
     name: "", birth_date: "", medical_conditions: "", special_needs: "",
     emergency_contact: "", emergency_phone: "", notes: "",
+    whatsapp_alerts_enabled: false, whatsapp_alerts_phone: "",
   });
 
   const { data: elderlyList = [], isLoading } = useQuery({
@@ -73,6 +75,8 @@ export function ElderlyTab() {
         emergency_contact: form.emergency_contact || null,
         emergency_phone: form.emergency_phone || null,
         notes: form.notes || null,
+        whatsapp_alerts_enabled: form.whatsapp_alerts_enabled,
+        whatsapp_alerts_phone: form.whatsapp_alerts_enabled ? (form.whatsapp_alerts_phone || null) : null,
       };
       if (editingId) {
         const { error } = await supabase.from("elderly").update(payload).eq("id", editingId);
@@ -102,7 +106,7 @@ export function ElderlyTab() {
   });
 
   const resetForm = () => {
-    setForm({ name: "", birth_date: "", medical_conditions: "", special_needs: "", emergency_contact: "", emergency_phone: "", notes: "" });
+    setForm({ name: "", birth_date: "", medical_conditions: "", special_needs: "", emergency_contact: "", emergency_phone: "", notes: "", whatsapp_alerts_enabled: false, whatsapp_alerts_phone: "" });
     setEditingId(null);
     setDialogOpen(false);
   };
@@ -112,6 +116,8 @@ export function ElderlyTab() {
       name: e.name, birth_date: e.birth_date || "", medical_conditions: e.medical_conditions || "",
       special_needs: e.special_needs || "", emergency_contact: e.emergency_contact || "",
       emergency_phone: e.emergency_phone || "", notes: e.notes || "",
+      whatsapp_alerts_enabled: !!e.whatsapp_alerts_enabled,
+      whatsapp_alerts_phone: e.whatsapp_alerts_phone || "",
     });
     setEditingId(e.id);
     setDialogOpen(true);
@@ -182,6 +188,38 @@ export function ElderlyTab() {
                   <Label>Telefone</Label>
                   <Input value={form.emergency_phone} onChange={(e) => setForm({ ...form, emergency_phone: e.target.value })} placeholder="(00) 00000-0000" />
                 </div>
+              </div>
+
+              <Separator />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-green-600" />
+                      Alertas via WhatsApp
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Envie notificações de emergência, medicação e check-ins para o responsável.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={form.whatsapp_alerts_enabled}
+                    onCheckedChange={(checked) => setForm({ ...form, whatsapp_alerts_enabled: checked })}
+                  />
+                </div>
+                {form.whatsapp_alerts_enabled && (
+                  <div>
+                    <Label>Telefone do responsável (WhatsApp)</Label>
+                    <Input
+                      value={form.whatsapp_alerts_phone}
+                      onChange={(e) => setForm({ ...form, whatsapp_alerts_phone: e.target.value })}
+                      placeholder="+55 (00) 00000-0000"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Inclua o DDD. Usaremos este número para enviar as notificações.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <Separator />

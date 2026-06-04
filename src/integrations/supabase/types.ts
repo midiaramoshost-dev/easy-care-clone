@@ -425,6 +425,8 @@ export type Database = {
           responsible_id: string
           special_needs: string | null
           updated_at: string
+          whatsapp_alerts_enabled: boolean
+          whatsapp_alerts_phone: string | null
         }
         Insert: {
           birth_date?: string | null
@@ -439,6 +441,8 @@ export type Database = {
           responsible_id: string
           special_needs?: string | null
           updated_at?: string
+          whatsapp_alerts_enabled?: boolean
+          whatsapp_alerts_phone?: string | null
         }
         Update: {
           birth_date?: string | null
@@ -453,6 +457,8 @@ export type Database = {
           responsible_id?: string
           special_needs?: string | null
           updated_at?: string
+          whatsapp_alerts_enabled?: boolean
+          whatsapp_alerts_phone?: string | null
         }
         Relationships: [
           {
@@ -882,6 +888,7 @@ export type Database = {
         Row: {
           address: string | null
           avatar_url: string | null
+          cameras_quantity: number
           created_at: string
           full_name: string | null
           id: string
@@ -891,6 +898,7 @@ export type Database = {
         Insert: {
           address?: string | null
           avatar_url?: string | null
+          cameras_quantity?: number
           created_at?: string
           full_name?: string | null
           id: string
@@ -900,6 +908,7 @@ export type Database = {
         Update: {
           address?: string | null
           avatar_url?: string | null
+          cameras_quantity?: number
           created_at?: string
           full_name?: string | null
           id?: string
