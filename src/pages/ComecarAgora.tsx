@@ -196,16 +196,35 @@ const ComecarAgora = () => {
                   )}
 
                   {tipoSelecionado === "cliente" && (
-                    <div className="space-y-2">
-                      <Label htmlFor="necessidades">Necessidades</Label>
-                      <Textarea
-                        id="necessidades"
-                        name="necessidades"
-                        placeholder="Descreva suas necessidades de cuidado..."
-                        rows={4}
-                      />
-                    </div>
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="cameras">Quantidade de câmeras desejadas</Label>
+                        <Input
+                          id="cameras"
+                          name="cameras"
+                          type="number"
+                          min={0}
+                          max={50}
+                          value={cameras}
+                          onChange={(e) => setCameras(Math.max(0, parseInt(e.target.value || "0", 10)))}
+                          placeholder="0"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Informe quantas câmeras de monitoramento você pretende utilizar (0 se nenhuma).
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="necessidades">Necessidades</Label>
+                        <Textarea
+                          id="necessidades"
+                          name="necessidades"
+                          placeholder="Descreva suas necessidades de cuidado..."
+                          rows={4}
+                        />
+                      </div>
+                    </>
                   )}
+
 
                   <Button type="submit" className="w-full" size="lg" disabled={loading}>
                     {loading ? "Enviando..." : "Enviar Cadastro"}
