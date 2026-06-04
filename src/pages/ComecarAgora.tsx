@@ -33,17 +33,21 @@ const ComecarAgora = () => {
     const name = formData.get("nome") as string;
     const email = formData.get("email") as string;
     const phone = formData.get("telefone") as string;
-    const message = tipoSelecionado === "cuidador"
+    const baseMessage = tipoSelecionado === "cuidador"
       ? (formData.get("experiencia") as string)
       : (formData.get("necessidades") as string);
+    const message = tipoSelecionado === "cliente"
+      ? `[Câmeras desejadas: ${cameras}] ${baseMessage || "Cadastro via formulário"}`
+      : (baseMessage || "Cadastro via formulário");
 
     const { error } = await supabase.from("contacts").insert({
       name,
       email,
       phone: phone || null,
-      message: message || "Cadastro via formulário",
+      message,
       type: tipoSelecionado || "geral",
     });
+
 
     setLoading(false);
 
