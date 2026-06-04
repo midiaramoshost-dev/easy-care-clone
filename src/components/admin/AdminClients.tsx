@@ -52,7 +52,9 @@ export function AdminClients() {
     password: "",
     plan_id: "",
     billing_period: "monthly",
+    cameras_quantity: 0,
   });
+
 
   const fetchClients = async () => {
     setLoading(true);
