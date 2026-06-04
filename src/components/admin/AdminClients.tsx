@@ -227,8 +227,10 @@ export function AdminClients() {
         phone: form.phone,
         address: form.address,
         avatar_url: avatarUrl,
+        cameras_quantity: form.cameras_quantity,
       }).eq("id", userId);
       if (profileErr) throw profileErr;
+
 
       if (form.plan_id) {
         const existing = selectedClient.subscription;
