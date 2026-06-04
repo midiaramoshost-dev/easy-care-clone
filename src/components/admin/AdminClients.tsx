@@ -91,9 +91,11 @@ export function AdminClients() {
         phone: p.phone,
         address: p.address,
         avatar_url: (p as any).avatar_url || null,
+        cameras_quantity: (p as any).cameras_quantity ?? 0,
         created_at: p.created_at,
         subscription: subs?.find((s) => s.user_id === p.id) || null,
       }));
+
       setClients(mapped);
     } catch (error) {
       console.error("Error fetching clients:", error);
