@@ -206,7 +206,7 @@ export function AdminRepasses() {
 
   const markRepasse = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const update: Record<string, unknown> = { status };
+      const update: { status: string; paid_at?: string } = { status };
       if (status === "paid") update.paid_at = new Date().toISOString();
       const { error } = await supabase.from("repasses").update(update).eq("id", id);
       if (error) throw error;
