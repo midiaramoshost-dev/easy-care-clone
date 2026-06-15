@@ -18,6 +18,8 @@ import AdminInstitutions from "./components/admin/AdminInstitutions";
 import { AdminPlansTab } from "./components/admin/AdminPlansTab";
 import AdminCaregivers from "./components/admin/AdminCaregivers";
 import AdminClients from "./components/admin/AdminClients";
+import AdminPartners from "./components/admin/AdminPartners";
+import TrabalheConosco from "./pages/TrabalheConosco";
 import AreaCuidador from "./pages/AreaCuidador";
 import AreaCliente from "./pages/AreaCliente";
 import ComecarAgora from "./pages/ComecarAgora";
@@ -57,11 +59,13 @@ const App = () => (
               <Route path="doacoes" element={<AdminDonations />} />
               <Route path="repasses" element={<AdminRepasses />} />
               <Route path="instituicoes" element={<AdminInstitutions />} />
+              <Route path="parceiros" element={<AdminPartners />} />
               <Route path="configuracoes" element={<AdminSettings />} />
             </Route>
             <Route path="/cuidador" element={<AreaCuidador />} />
             <Route path="/cliente" element={<AreaCliente />} />
             <Route path="/comecar" element={<ComecarAgora />} />
+            <Route path="/trabalhe-conosco" element={<TrabalheConosco />} />
             <Route path="/care-groups" element={<CareGroupsPage />} />
             <Route path="/care-groups/:id" element={<CareGroupDetailPage />} />
             <Route path="/empresa" element={<CompanyDashboard />} />

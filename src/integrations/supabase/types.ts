@@ -756,6 +756,66 @@ export type Database = {
         }
         Relationships: []
       }
+      partners: {
+        Row: {
+          admin_notes: string | null
+          catalog_url: string | null
+          cnpj: string | null
+          company_name: string
+          contact_name: string
+          created_at: string
+          description: string | null
+          email: string
+          id: string
+          items: Json
+          logo_url: string | null
+          partner_type: Database["public"]["Enums"]["partner_type"]
+          phone: string | null
+          status: Database["public"]["Enums"]["partner_status"]
+          updated_at: string
+          user_id: string | null
+          website: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          catalog_url?: string | null
+          cnpj?: string | null
+          company_name: string
+          contact_name: string
+          created_at?: string
+          description?: string | null
+          email: string
+          id?: string
+          items?: Json
+          logo_url?: string | null
+          partner_type?: Database["public"]["Enums"]["partner_type"]
+          phone?: string | null
+          status?: Database["public"]["Enums"]["partner_status"]
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          catalog_url?: string | null
+          cnpj?: string | null
+          company_name?: string
+          contact_name?: string
+          created_at?: string
+          description?: string | null
+          email?: string
+          id?: string
+          items?: Json
+          logo_url?: string | null
+          partner_type?: Database["public"]["Enums"]["partner_type"]
+          phone?: string | null
+          status?: Database["public"]["Enums"]["partner_status"]
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       payment_settings: {
         Row: {
           created_at: string
@@ -1203,6 +1263,8 @@ export type Database = {
       care_group_role: "responsavel" | "cuidador" | "admin_empresa"
       company_plan_type: "basic" | "premium" | "professional" | "enterprise"
       invoice_status: "draft" | "pending" | "paid" | "overdue" | "cancelled"
+      partner_status: "pendente" | "aprovado" | "rejeitado"
+      partner_type: "produto" | "servico" | "ambos"
       payment_method:
         | "stripe"
         | "mercado_pago"
@@ -1346,6 +1408,8 @@ export const Constants = {
       care_group_role: ["responsavel", "cuidador", "admin_empresa"],
       company_plan_type: ["basic", "premium", "professional", "enterprise"],
       invoice_status: ["draft", "pending", "paid", "overdue", "cancelled"],
+      partner_status: ["pendente", "aprovado", "rejeitado"],
+      partner_type: ["produto", "servico", "ambos"],
       payment_method: [
         "stripe",
         "mercado_pago",
