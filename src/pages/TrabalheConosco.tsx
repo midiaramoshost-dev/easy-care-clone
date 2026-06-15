@@ -99,7 +99,14 @@ const TrabalheConosco = () => {
       const { data: auth } = await supabase.auth.getUser();
 
       const { error } = await supabase.from("partners").insert({
-        ...parsed.data,
+        company_name: parsed.data.company_name,
+        contact_name: parsed.data.contact_name,
+        email: parsed.data.email,
+        cnpj: parsed.data.cnpj || null,
+        phone: parsed.data.phone || null,
+        website: parsed.data.website || null,
+        partner_type: parsed.data.partner_type,
+        description: parsed.data.description || null,
         items: cleanItems,
         logo_url,
         catalog_url,
