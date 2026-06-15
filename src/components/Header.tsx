@@ -72,6 +72,9 @@ const Header = () => {
               </DropdownMenu>
             ) : (
               <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/trabalhe-conosco">Trabalhe Conosco</Link>
+                </Button>
                 <Button variant="ghost" size="sm" className="gap-2" asChild>
                   <Link to="/auth">
                     <LogIn className="w-4 h-4" />
@@ -120,6 +123,9 @@ const Header = () => {
                   </>
                 ) : (
                   <>
+                    <Button variant="ghost" className="justify-start gap-2" asChild onClick={() => setIsOpen(false)}>
+                      <Link to="/trabalhe-conosco">Trabalhe Conosco</Link>
+                    </Button>
                     <Button variant="ghost" className="justify-start gap-2" asChild onClick={() => setIsOpen(false)}>
                       <Link to="/auth">
                         <LogIn className="w-4 h-4" />
