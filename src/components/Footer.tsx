@@ -21,7 +21,7 @@ const Footer = () => {
                 <Mail className="w-4 h-4" />
                 contato@cuidadofacil.com.br
               </a>
-              <a href="tel:+551140028922" className="flex items-center gap-2 text-gray-400 hover:text-primary transition-colors">
+              <a href="tel:+5515997625135" className="flex items-center gap-2 text-gray-400 hover:text-primary transition-colors">
                 <Phone className="w-4 h-4" />
                 (11) 4002-8922
               </a>

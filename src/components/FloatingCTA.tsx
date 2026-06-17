@@ -6,7 +6,7 @@ const contactOptions = [
   {
     icon: Phone,
     label: "Telefone",
-    href: "tel:+5511999999999",
+    href: "tel:+5515997625135",
     bg: "bg-primary",
   },
   {
@@ -18,7 +18,7 @@ const contactOptions = [
   {
     icon: MessageCircle,
     label: "WhatsApp",
-    href: "https://wa.me/5511999999999?text=Olá! Gostaria de mais informações.",
+    href: "https://wa.me/5515997625135?text=Olá! Gostaria de mais informações.",
     bg: "bg-success",
   },
 ];
